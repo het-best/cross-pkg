@@ -36,12 +36,12 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
     {
         switch (flag)
         {
-            case 'r':
+            case 'f':
                 force_download = true;
                 if (!hide_flags_msg)
                     std::cout << FLAG_PREFIX << "Force source download is enabled" << WHITE_COL << "\n";
                 break;
-            case 'p':
+            case 'u':
                 preserve_src = true;
                 if (!hide_flags_msg)
                     std::cout << FLAG_PREFIX << "Source preservation is enabled" << WHITE_COL << "\n";
@@ -98,7 +98,8 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
             continue;
         if (!preserve_src && std::filesystem::exists(target_cache + "source"))
             exec_cmd("rm -rf " + target_cache + "source");
-        exec_cmd("mkdir " + target_cache + "source");
+        if (!std::filesystem::exists(target_cache + "source"))
+            exec_cmd("mkdir " + target_cache + "source");
 
 
         for (const auto& [prefix, source, output] : info->sources)
@@ -179,8 +180,6 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                     exec_cmd("cp " + target_cache + source_name + " " + target_cache + "source/" + output);
                     continue;
                 }
-
-                exec_cmd("mkdir " + target_cache + "source/" + output);
 
                 if (verbose)
                     exec_cmd("tar -xvf" + target_cache + source_name + " -C" + target_cache + "source/" + output + " --strip-components=1");
