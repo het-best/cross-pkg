@@ -7,6 +7,7 @@ Cross has been heavenly inspired by [kiss](https://github.com/kisslinux/kiss) pa
 - Auto fetching new package versions (currently supports only GitHub and ftp.gnu.org)
 - Safe installing (probability of you breaking something is extremely low)
 - Additional arguments to commands, you can enable verbose input, do not install dependencies etc
+- Mirrors support
 
 ## Compiling
 Cross requires:
@@ -79,3 +80,14 @@ Example package script
 	        cmake --install build --prefix "$1"
     -after-install-
         echo "This is after-install script!"
+
+## Configuring mirrors
+To add mirror to some source you need to create file with your host name, 
+just domain name, without protocol or anything else in /var/db/cross/mirrors.
+You need to specify mirrors one per line, just with domain, for example:
+
+`/var/db/cross/mirrors/ftp.gnu.org`:
+
+    sunsite.icm.edu.pl
+    ftp-stud.fht-esslingen.de
+    mirrors.kernel.org
