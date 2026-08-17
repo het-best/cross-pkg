@@ -63,7 +63,7 @@ int main(const int argc, char* argv[])
             DOWN_CMD = "run0";
     }
 
-    if (getuid() != geteuid())
+    if (getuid() != 0)
     {
         if (SU_CMD.empty())
         {

@@ -108,7 +108,7 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
     // Installed check
     const std::optional<pkg_info> inst_info = get_pkg_info(INSTALL_PATH + target + "/config.crs", false);
 
-    if (!info.has_value())
+    if (!inst_info.has_value())
     {
         std::cout << PREFIX << "Installed: " << ORANGE_COL << "No" << WHITE_COL << "\n";
         return;
