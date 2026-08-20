@@ -22,6 +22,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include "../messages.hpp"
 #include "../split.hpp"
@@ -88,23 +89,33 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
     }
 
 
-    std::cout << PREFIX << "Package dependencies: " << CYAN_COL << "\n";
-    for (const std::string& depend : info->depends)
+    // Dependencies
+    if (info->depends.empty())
     {
-        std::cout << depend << (info->depends.back() == depend ? WHITE_COL : ", ");
+        std::cout << PREFIX << "Package dependencies: " << CYAN_COL << "None" << WHITE_COL << "\n";
+    }
+    else
+    {
+        std::cout << PREFIX << "Package dependencies: " << CYAN_COL;
+
+        for (const std::string& depend : info->depends)
+        {
+            std::cout << depend << (info->depends.back() == depend ? WHITE_COL + "\n" : ", ");
+        }
     }
 
 
     // Dependents
     final_str = "";
-    for (const std::filesystem::path path : std::filesystem::directory_iterator(INSTALL_PATH))
+    for (const std::filesystem::path path : std::filesystem::recursive_directory_iterator("/usr/repos"))
     {
-        std::optional<pkg_info> pkg_info = get_pkg_info(path.string() + "/config.crs", false);
-        if (!pkg_info.has_value())
+        if (is_directory(path))
             continue;
 
+        std::optional<pkg_info> pkg_info = get_pkg_info(path.string());
+
         if (std::ranges::find(pkg_info->depends, target) != pkg_info->depends.end())
-            final_str += path.filename().string() + ", ";
+            final_str += pkg_info->name + ", ";
     }
 
     if (final_str.empty())

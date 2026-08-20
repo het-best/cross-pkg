@@ -148,11 +148,11 @@ const std::array build_msgs =
     PREFIX + "Previous build took " + BLUE_COL + "{ARG1}" + WHITE_COL + "s, " + GREEN_COL + "{ARG2}" + WHITE_COL + "% faster this time\n",
     PREFIX + "Previous build took " + BLUE_COL + "{ARG1}" + WHITE_COL + "s, " + ORANGE_COL + "{ARG2}" + WHITE_COL + "% longer this time\n",
     PKG_PREFIX + "Package building failed :[\n",
-    PKG_PREFIX + "Package building was successful :D\n",
+    PREFIX + "Packages were built successfully :D\n",
 
     PREFIX + "Getting implicit targets\n",
     PKG_PREFIX + "Build arguments: " + CYAN_COL + "{ARG2}" + WHITE_COL + "\n",
-    PKG_PREFIX + "Striping compiled binaries\n",
+    PREFIX + "Striping compiled binaries\n",
     PREFIX + "Writing build times\n",
 };
 
