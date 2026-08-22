@@ -15,6 +15,7 @@
 
 #include "list.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <iostream>
 
@@ -29,12 +30,22 @@ void c_list()
     uint installed_count = 0;
     uint max_length = 0;
 
-    for (const std::filesystem::path path : std::filesystem::directory_iterator(INSTALL_PATH))
+    std::vector packages(std::filesystem::directory_iterator{INSTALL_PATH}, std::filesystem::directory_iterator{});
+
+    for (const std::filesystem::path path : packages)
     {
         max_length = std::max(max_length, static_cast<uint>(path.filename().string().length()));
     }
 
-    for (const std::filesystem::path path : std::filesystem::directory_iterator(INSTALL_PATH))
+
+    // Making sure that packages are in alphabetical order
+    std::ranges::sort(packages,
+        [](const std::filesystem::directory_entry& a, const std::filesystem::directory_entry& b)
+        {
+            return a.path() < b.path();
+        });
+
+    for (const std::filesystem::path path : packages)
     {
         std::optional<pkg_info> info = get_pkg_info(path.string() + "/config.crs", false);
         if (!info.has_value())
