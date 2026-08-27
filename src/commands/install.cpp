@@ -104,26 +104,6 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
         }
 
 
-        // Creating manifest
-        print_msg(MSG_PKG_MANIFEST, target_name);
-
-        std::ofstream file(target_cache + "manifest");
-
-        for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
-        {
-            if (is_directory(entry))
-                continue;
-
-            const std::string full_path = entry.string();
-            const std::string relative_path(full_path.begin() + std::string(target_cache + "install").length(), full_path.end());
-            file << relative_path << "\n";
-
-            if (verbose)
-                print_msg(MSGV_PKG_INST_FILE_FOUND, install_path + static_cast<std::string>(relative_path));
-        }
-        file.close();
-
-
         // Removing package files
         if (verbose)
             print_msg(MSGV_PKG_REM_FILES, target_name);
@@ -147,6 +127,26 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
         man_file.close();
 
 
+        // Creating manifest
+        print_msg(MSG_PKG_MANIFEST, target_name);
+
+        std::ofstream file(target_cache + "manifest");
+
+        for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
+        {
+            if (is_directory(entry))
+                continue;
+
+            const std::string full_path = entry.string();
+            const std::string relative_path(full_path.begin() + std::string(target_cache + "install").length(), full_path.end());
+            file << relative_path << "\n";
+
+            if (verbose)
+                print_msg(MSGV_PKG_INST_FILE_FOUND, install_path + static_cast<std::string>(relative_path));
+        }
+        file.close();
+
+
         // Installing to INSTALL_PATH
         if (verbose)
             print_msg(MSGV_PKG_INST_FILES, target_name);
@@ -164,6 +164,8 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 
         exec_cmd(SU_CMD + " cp " + target_cache + target_name + ".crs " + target_ins_path + "config.crs ");
         exec_cmd(SU_CMD + " cp " + target_cache  + "manifest " + target_ins_path);
+
+        exec_cmd(SU_CMD + " sudo chmod -R 744 " + target_ins_path)
 
 
         // Checking for already existing config files in /etc
