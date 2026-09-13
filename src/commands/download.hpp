@@ -26,6 +26,6 @@
 #include <string>
 #include <vector>
 
-
+bool url_download(const std::string& url, const std::string& path, const std::string& url_name);
 
 bool c_download(const std::vector<std::string> &targets, const std::vector<std::pair<char, std::string>> &flags, bool hide_flags_msg = false);

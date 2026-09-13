@@ -16,6 +16,7 @@ Cross requires:
 - Cmake >= 3.20 (older versions can still work but are not tested)
 - C++ 20
 - ninja
+- curl (if WITH_LIBCURL set to ON)
 
 The building is as simple as
 
@@ -26,6 +27,10 @@ And for installing
 
 	sudo cmake --install build
 
+### Compile arguments
+|    Option     |  Description  |    Value    |
+| ------------- | ------------- |-------------|
+| WITH_LIBCURL  | Compile cross-pkg with libcurl instead of calling curl/wget command line utility (TURNING THIS OFF ALLOWS VULNERABILITIES TO BE EXPLOITED) | ON |
 
 ## Using cross-pkg
 After you compiled and installed cross you can run `cross-pkg h` to get all commands and `cross-pkg h [cmd]`to get information about command arguments
