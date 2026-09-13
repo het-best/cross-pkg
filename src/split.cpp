@@ -46,57 +46,78 @@ std::vector<std::string> split(const std::string& str, const std::string& delimi
 
 uint cross_stoi(const std::string& str)
 {
-    std::string final_str;
-
-    for (const char c : str)
+    try
     {
-        if (c >= '0' && c <= '9')
-            final_str += c;
+        std::string final_str;
+
+        for (const char c : str)
+        {
+            if (c >= '0' && c <= '9')
+                final_str += c;
+        }
+
+        if (final_str.empty())
+            return 0;
+
+        return std::stoi(final_str);
     }
-
-    if (final_str.empty())
+    catch (...)
+    {
         return 0;
-
-    return std::stoi(final_str);
+    }
 }
 
 float cross_stof(const std::string& str)
 {
-    std::string final_str;
-
-    for (const char c : str)
+    try
     {
-        if (c >= '0' && c <= '9')
-            final_str += c;
-        else if (c == '.')
-            final_str += '.';
+        std::string final_str;
+
+        for (const char c : str)
+        {
+            if (c >= '0' && c <= '9')
+                final_str += c;
+            else if (c == '.')
+                final_str += '.';
+        }
+
+        if (final_str.empty())
+            return 0;
+
+        return std::stof(final_str);
     }
-
-    if (final_str.empty())
+    catch (...)
+    {
         return 0;
-
-    return std::stof(final_str);
+    }
 }
 
 
 uint64_t cross_stov(const std::string& str)
 {
-    constexpr uint VAR_SIZE = 8;
-
-    std::string final_str = "1";
-
-    for (const char c : str)
+    try
     {
-        if (c >= '0' && c <= '9')
-            final_str += c;
-    }
+        constexpr uint VAR_SIZE = 8;
 
-    while (final_str.size() < VAR_SIZE)
+        std::string final_str = "1";
+
+        for (const char c : str)
+        {
+            if (c >= '0' && c <= '9')
+                final_str += c;
+        }
+
+        while (final_str.size() < VAR_SIZE)
+        {
+            final_str += "0";
+        }
+
+        return std::stoul(final_str);
+    }
+    catch (...)
     {
-        final_str += "0";
+        return 0;
     }
-
-    return std::stoul(final_str);
 }
 
 

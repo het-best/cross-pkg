@@ -50,6 +50,9 @@ Also git+ prefix can have @ symbol with commit has after it to checkout to requi
 ### -depends-
 `Optional` Package dependencies, one package per line
 
+### -rebuild-depends-
+`Optional` Packages that needs to be rebuilded after build this package, same syntax as -depends-
+
 ### -before-build-
 `Optional` Script to run before building
 
@@ -70,6 +73,8 @@ Example package script
     -depends-
         cmake
         gcc
+    -rebuild-depends-
+        wayland
     -before-build-
         echo "This is before-build script!"
     -build-

@@ -181,8 +181,8 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 
 
         // Copying files
-        const std::string cpv_cmd = SU_CMD + " cp -rv --remove-destination ";
-        const std::string cp_cmd = SU_CMD + " cp -r --remove-destination ";
+        const std::string cpv_cmd = SU_CMD + " cp -rvp --remove-destination ";
+        const std::string cp_cmd = SU_CMD + " cp -rp --remove-destination ";
 
         for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
         {
@@ -214,7 +214,10 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 
 
         if (std::filesystem::exists(target_cache + "tmp"))
-            exec_cmd("mv " + target_cache + "tmp/* " + target_cache + "/install/etc/ 2>/dev/null");
+        {
+            exec_cmd("cp -r " + target_cache + "tmp/* " + target_cache + "/install/etc/ 2>/dev/null");
+            exec_cmd("rm -r " + target_cache + "tmp");
+        }
 
         if (number.first.empty())
             print_msg(MSG_PKG_INSTALLED, target_name, std::to_string(i + 1) + "/" + std::to_string(targets.size()));
