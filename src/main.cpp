@@ -42,14 +42,6 @@
 int main(const int argc, char* argv[])
 {
     // Checking available commands
-    if (getenv("CROSS_DOWNLOAD"))
-    {
-        if (static_cast<std::string>(getenv("CROSS_DOWNLOAD")) == "curl" && exec_cmd("curl --help >/dev/null 2>&1"))
-            DOWN_CMD = "curl";
-        else if (static_cast<std::string>(getenv("CROSS_DOWNLOAD")) == "wget" && exec_cmd("wget --help >/dev/null 2>&1"))
-            DOWN_CMD = "wget";
-    }
-
     if (DOWN_CMD.empty())
     {
         if (exec_cmd("curl --help >/dev/null 2>&1"))
@@ -58,25 +50,15 @@ int main(const int argc, char* argv[])
             DOWN_CMD = "wget";
     }
 
-    if (getenv("CROSS_SU"))
-    {
-        if (static_cast<std::string>(getenv("CROSS_SU")) == "sudo" && exec_cmd("which sudo >/dev/null 2>&1"))
-            DOWN_CMD = "sudo";
-        else if (static_cast<std::string>(getenv("CROSS_SU")) == "doas" && exec_cmd("which doas >/dev/null 2>&1"))
-            DOWN_CMD = "doas";
-        else if (static_cast<std::string>(getenv("CROSS_SU")) == "run0" && exec_cmd("which run0 >/dev/null 2>&1"))
-            DOWN_CMD = "run0";
-    }
-
     if (getuid() != 0)
     {
         if (SU_CMD.empty())
         {
-            if (exec_cmd("sudo --help >/dev/null 2>&1"))
-                SU_CMD = "sudo";
-            else if (exec_cmd("doas --help >/dev/null 2>&1"))
+            if (exec_cmd("doas --help 2>/dev/null 2>&1"))
                 SU_CMD = "doas";
-            else if (exec_cmd("eun0 --help >/dev/null 2>&1"))
+            else if (exec_cmd("sudo --help 2>/dev/null 2>&1"))
+                SU_CMD = "sudo";
+            else if (exec_cmd("eun0 --help 2>/dev/null 2>&1"))
                 SU_CMD = "run0";
         }
     }
@@ -226,9 +208,28 @@ int main(const int argc, char* argv[])
         c_update(flags);
     else if (command == "version" || command == "v")
         c_version(flags);
+#ifdef DEV_MODE
+    else if (command == "test")
+    {
+        std::cout << WHITE_COL << "██" << WHITE_COL;
+        std::cout << RED_COL << "██" << WHITE_COL;
+        std::cout << GREEN_COL << "██" << WHITE_COL;
+        std::cout << BLUE_COL << "██" << WHITE_COL;
+        std::cout << ORANGE_COL << "██" << WHITE_COL;
+        std::cout << MAG_COL << "██" << WHITE_COL;
+        std::cout << CYAN_COL << "██" << WHITE_COL;
+        std::cout << PINK_COL << "██" << WHITE_COL << "\n";
+        
+        for (uint i = 0; i < 1000; i++)
+        {
+            print_msg(static_cast<msg_type>(i), "{ARG1}", "{ARG2}", "{ARG3}");
+            if (i % 99 == 0)
+                std::cout << "\n";
+        }
+    }
+#endif
     else
         print_msg(MSG_UNK_CMD, command);
-
 
 
 #ifdef WITH_LIBCURL

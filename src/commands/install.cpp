@@ -154,7 +154,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
         std::string target_ins_path = install_path + INSTALL_PATH + target_name + "/";
 
         if (std::filesystem::exists(target_ins_path))
-            exec_cmd(SU_CMD + " rm -rf " + target_ins_path);
+            std::filesystem::remove_all(target_ins_path);
 
         if (!std::filesystem::exists(target_ins_path))
             exec_cmd(SU_CMD + " mkdir " + target_ins_path);
@@ -172,8 +172,8 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
         if (std::filesystem::exists(target_cache + "install/etc"))
         {
             if (std::filesystem::exists(target_cache + "tmp"))
-                exec_cmd("rm -r " + target_cache + "tmp");
-            exec_cmd("mkdir " + target_cache + "tmp");
+                std::filesystem::remove_all(target_cache + "tmp");
+            std::filesystem::create_directory(target_cache + "tmp");
 
             exec_cmd("(cd " + target_cache + "install/etc && find . -type f -exec sh -c 'if [ -e \"" + install_path + "/etc/$1\" ]; then mkdir -p \"" + target_cache +
                 "tmp/$(dirname \"$1\")\" && mv -v \"" + target_cache + "install/etc/$1\" \"" + target_cache + "tmp/$1\"; fi' _ {} \\;) 2>/dev/null");
@@ -216,7 +216,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
         if (std::filesystem::exists(target_cache + "tmp"))
         {
             exec_cmd("cp -r " + target_cache + "tmp/* " + target_cache + "/install/etc/ 2>/dev/null");
-            exec_cmd("rm -r " + target_cache + "tmp");
+            std::filesystem::remove_all(target_cache + "tmp");
         }
 
         if (number.first.empty())
