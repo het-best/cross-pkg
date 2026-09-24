@@ -335,6 +335,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
             return false;
         }
 
+
         // Striping binaries
         if (!skip_strip)
         {
@@ -349,7 +350,6 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
         target_times.push_back(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - build_start).count() / 1000.0f);
         print_msg(MSG_PKG_BUILD_SUC, target_name, std::to_string(i + 1) + "/" + std::to_string(target_infos.size()), round_up_str(target_times.back()));
 
-
         if (std::filesystem::exists(install_path + INSTALL_PATH + target_name + "/build-time"))
         {
             // Reading previous build time
@@ -357,7 +357,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
             std::stringstream buffer;
             buffer << file.rdbuf();
             file.close();
-
+            
             std::string prev_time = buffer.str();
             if (prev_time.back() == '\n')
                 prev_time.erase(prev_time.length() - 1);
@@ -391,9 +391,6 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
                 exec_cmd("chmod +x " + target_cache + "after-install && (cd " + target_cache + "source && ../after-install)");
         }
     }
-
-    if (dont_install)
-        return true;
 
 
     // Writing build times
