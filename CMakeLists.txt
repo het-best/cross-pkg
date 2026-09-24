@@ -38,3 +38,10 @@ add_executable(cross-pkg src/main.cpp
 
 install(TARGETS cross-pkg DESTINATION bin)
 target_link_options(cross-pkg PRIVATE -static-libgcc -static-libstdc++)
+
+option(WITH_LIBCURL "Compile cross-pkg with libcurl instead of calling curl/wget command line utility (TURNING THIS OFF ALLOWS VULNERABILITIES TO BE EXPLOITED)" ON)
+if (WITH_LIBCURL)
+    find_package(CURL REQUIRED)
+    target_link_libraries(cross-pkg PRIVATE CURL::libcurl)
+    add_compile_definitions(WITH_LIBCURL)
+endif()

@@ -19,11 +19,111 @@
 #include <fstream>
 #include <iostream>
 
+#ifdef WITH_LIBCURL
+#include <curl/curl.h>
+#endif
+
 #include "search.hpp"
 #include "../cmd.hpp"
 #include "../messages.hpp"
 #include "../split.hpp"
 
+
+#ifdef WITH_LIBCURL
+size_t curl_write_call(char *ptr, size_t size, size_t nmemb, void *stream)
+{
+    return fwrite(ptr, size, nmemb, (FILE *)stream);
+}
+
+struct myprogress
+{
+  curl_off_t lastruntime;
+  CURL *curl;
+};
+ 
+static int curl_progress(void *p, curl_off_t dltotal, curl_off_t dlnow,
+                    curl_off_t ultotal, curl_off_t ulnow)
+{
+    if (dltotal <= 0)
+        return 0;
+
+    const uint progress_width = 40;
+    const float fraction = dlnow / static_cast<float>(dltotal);
+    int filled = static_cast<int>(progress_width * fraction);
+
+
+    // Progress bar
+    std::ostringstream bar;
+    bar << '\r' << '[';
+
+    for (int i = 0; i < progress_width; i++)
+        bar << (i == filled  ?  (WHITE_COL + '>') : (i < filled ? (GREEN_COL + "=") : "-"));
+
+    bar << "] " << std::setw(3) << static_cast<int>(fraction * 100) << "%";
+
+
+    // Flushing
+    std::cerr << bar.str() << std::flush;
+
+    return 0;
+}
+
+bool url_download(const std::string& url, const std::string& path, const std::string& url_name)
+{
+    // Initializing
+    CURL* curl = curl_easy_init();
+    if (!curl)
+    {
+        // TODO print_msg
+        return false;
+    }
+
+
+    // Opening file to output into
+    FILE* file = fopen((path + url_name).c_str() , "wb");
+    if (!file)
+    {
+        // TODO print_msg
+        curl_easy_cleanup(curl);
+        return false;
+    }
+
+
+    // Downloading params
+    struct myprogress prog(0, curl); 
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_call);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
+    curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_progress);
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &prog);
+    curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
+
+
+    // Downloading
+    bool result = curl_easy_perform(curl) == CURLE_OK;
+    
+    std::cerr << '\n';
+    fclose(file);
+    curl_easy_cleanup(curl);
+
+
+    return result;
+}
+#else
+bool url_download(const std::string& url, const std::string& path, const std::string& url_name)
+{
+    if (DOWN_CMD == "curl")
+        return exec_cmd("curl -L " + url + " -o " + path + url_name);
+    else if (DOWN_CMD == "wget")
+        return exec_cmd("wget " + url + " -P " + path);
+
+    return false;
+}
+#endif
 
 
 bool c_download(const std::vector<std::string> &targets, const std::vector<std::pair<char, std::string>> &flags, const bool hide_flags_msg)
@@ -121,14 +221,7 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
 
 
                 // Downloading
-                bool download_result = false;
-
-                if (DOWN_CMD == "curl")
-                    download_result = exec_cmd("curl -L " + source + " -o " + target_cache + source_name);
-                else if (DOWN_CMD == "wget")
-                    download_result = exec_cmd("wget " + source + " -P " + target_cache);
-
-                if (download_result)
+                if (url_download(source, target_cache, source_name))
                     continue;
 
 
@@ -147,12 +240,7 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                         const std::string url = splitted_source[0] + "//" + line + no_domain_url;
                         print_msg(MSG_PKG_DOWN_MIRROR, target_name, url);
 
-                        if (DOWN_CMD == "curl")
-                            download_result = exec_cmd("curl -L " + url + " -o " + target_cache + source_name);
-                        else if (DOWN_CMD == "wget")
-                            download_result = exec_cmd("wget " + url + " -P " + target_cache);
-
-                        if (download_result)
+                        if (url_download(url, target_cache, source_name))
                             goto extract;
                     }
                 }
