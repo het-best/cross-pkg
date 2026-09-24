@@ -43,18 +43,13 @@ struct curl_prog_str
  
 int curl_progress(void *p, curl_off_t down_total, curl_off_t down_now, curl_off_t up_total, curl_off_t up_now)
 {
-    // Make so if server did not respond yet it will be 0%
-    if ((down_now == 0 && down_total <= 0) || (down_total > 0 && down_total == down_now && down_total < 0))
-        return 0; 
-
-    
     // Setup
     const curl_prog_str* progress = static_cast<curl_prog_str*>(p);
 
     const uint progress_width = 40;
-    const float fraction = down_now / static_cast<float>(down_total);
-    const uint filled = static_cast<int>(progress_width * fraction);
-    
+    const float fraction = (down_total > 0) ? (down_now / static_cast<float>(down_total)) : 0.0f;
+    const uint filled = static_cast<uint>(progress_width * fraction);
+
 
     // Getting download speed
     curl_off_t speed = 0;
@@ -72,7 +67,7 @@ int curl_progress(void *p, curl_off_t down_total, curl_off_t down_now, curl_off_
 
     // Getting estimated time
     const uint est_time = (down_total - down_now) / static_cast<float>(speed);
-    std::string est_time_str;
+    std::string est_time_str = "--:--";
 
     if (est_time <= 3600)
     {
@@ -139,7 +134,7 @@ bool url_download(const std::string& url, const std::string& path, const std::st
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
-    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 30L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 15L);
     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_progress);
     curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &progress);
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
@@ -147,6 +142,7 @@ bool url_download(const std::string& url, const std::string& path, const std::st
 
     // Downloading
     const CURLcode result = curl_easy_perform(curl);
+    curl_progress(&progress, 1, 1, 0, 0);
     std::cerr << "\n";
     
     if (result != CURLE_OK)
@@ -262,13 +258,15 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
             if (prefix == SRC_URL)
             {
                 // Checking
+				const bool is_archive = source_name.ends_with(".gz") || source_name.ends_with(".bz") || source_name.ends_with(".tar") || source_name.ends_with(".xz");
+
                 if (std::filesystem::exists(target_cache + source_name) && !force_download &&
-                    exec_cmd("tar -atf " + target_cache + source_name + " > /dev/null 2>&1"))
+					!(is_archive && !exec_cmd("tar -atf " + target_cache + source_name + " > /dev/null 2>&1")))
                 {
-                    print_msg(MSG_PKG_ALR_DOWN, target_name, source);
+					print_msg(MSG_PKG_ALR_DOWN, target_name, source);
                     continue;
                 }
-
+				
                 print_msg(MSG_PKG_DOWN_SRC, target_name, source);
 
 
@@ -281,24 +279,28 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                 const std::vector<std::string> splitted_source = split(source, "/");
                 const std::string domain = splitted_source[2];
                 const std::string no_domain_url(source.begin() + (splitted_source[0] + "//" + splitted_source[2]).length(), source.end());
+                bool good_mirror = false;
 
                 if (std::filesystem::exists(MIRRORS_PATH) && std::filesystem::exists(MIRRORS_PATH + domain))
                 {
                     std::ifstream file(MIRRORS_PATH + domain);
                     std::string line;
 
-                    while (getline(file, line))
+                    while (getline(file, line) && !good_mirror)
                     {
                         const std::string url = splitted_source[0] + "//" + line + no_domain_url;
                         print_msg(MSG_PKG_DOWN_MIRROR, target_name, url);
 
                         if (url_download(url, target_cache, source_name))
-                            goto extract;
+                            good_mirror = true;
                     }
                 }
 
-                print_msg(MSG_PKG_DOWN_FAIL, source);
-                return false;
+                if (!good_mirror)
+                {
+                    print_msg(MSG_PKG_DOWN_FAIL, source);
+                    return false;
+                }
             }
             else if (prefix == SRC_GIT) 
             {
@@ -342,7 +344,6 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                     exec_cmd("(cd " + target_cache + commit + "/ " + output + " && git checkout " + commit + " " + target_cache + commit + "/" + output + ")");
             }
         }
-        extract:
 
 
         // Extracting sources

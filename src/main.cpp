@@ -49,18 +49,21 @@ int main(const int argc, char* argv[])
         else if (exec_cmd("wget --help >/dev/null 2>&1"))
             DOWN_CMD = "wget";
     }
+	
+    if (getenv("CROSS_SU"))
+        SU_CMD = getenv("CROSS_SU");
 
     if (getuid() != 0)
     {
         if (SU_CMD.empty())
         {
-            if (exec_cmd("doas -V >/dev/null 2>&1"))
-                SU_CMD = "doas";
-            else if (exec_cmd("sudo --help >/dev/null 2>&1"))
-                SU_CMD = "sudo";
-            else if (exec_cmd("eun0 --help >/dev/null 2>&1"))
-                SU_CMD = "run0";
-        }
+        	if (exec_cmd("doas -C /etc/doas.conf >/dev/null 2>&1"))
+        	    SU_CMD = "doas";
+        	else if (exec_cmd("sudo --help >/dev/null 2>&1"))
+        	    SU_CMD = "sudo";
+        	else if (exec_cmd("eun0 --help >/dev/null 2>&1"))
+        	    SU_CMD = "run0";
+		}
     }
 
 
