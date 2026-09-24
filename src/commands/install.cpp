@@ -154,7 +154,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
         std::string target_ins_path = install_path + INSTALL_PATH + target_name + "/";
 
         if (std::filesystem::exists(target_ins_path))
-            std::filesystem::remove_all(target_ins_path);
+            exec_cmd(SU_CMD + " rm -rf " + target_ins_path);
 
         if (!std::filesystem::exists(target_ins_path))
             exec_cmd(SU_CMD + " mkdir " + target_ins_path);
