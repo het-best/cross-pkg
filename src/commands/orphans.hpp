@@ -13,22 +13,14 @@
     GNU General Public License for more details.
  */
 
+/* orphans - Lists packages without any dependents
+ *
+ * Flags:
+ * None
+ */
+
 #pragma once
 
 
-#include <string>
 
-
-
-#define CROSS_VERSION "1.5"
-
-#define MAIN_PATH "/var/db/cross/"
-#define INSTALL_PATH "/var/db/cross/install/"
-#define CACHE_PATH "/var/db/cross/cache/"
-#define MIRRORS_PATH "/var/db/cross/mirrors/"
-
-#define CFLAGS "-D_FORTIFY_SOURCE=2 -fstack-protector-strong -O2 -pipe -march=native"
-#define BUILD_ARGS "CFLAGS=\"" CFLAGS "\" CXXFLAGS=\"$CFLAGS\" MAKEFLAGS=\"-j" + std::to_string(std::thread::hardware_concurrency()) + "\""
-
-inline std::string SU_CMD;
-inline std::string DOWN_CMD;
+void c_orphans();

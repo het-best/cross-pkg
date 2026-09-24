@@ -64,19 +64,8 @@ void c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 
         // Checking dependents
         print_msg(MSG_PKG_CHECK_DEL, target_name);
-        std::string depends_str = "";
 
-        for (const std::filesystem::path path : std::filesystem::directory_iterator(INSTALL_PATH))
-        {
-            std::optional<pkg_info> pkg_info = get_pkg_info(path.string() + "/config.crs", false);
-            if (!pkg_info.has_value())
-                continue;
-
-            if (std::ranges::find(pkg_info->depends, target_name) != pkg_info->depends.end())
-                depends_str += path.filename().string() + ", ";
-        }
-
-        if (depends_str != "")
+        if (std::string depends_str = get_pkg_dependents(target_name); depends_str != "")
         {
             depends_str.erase(depends_str.length() - 2);
             print_msg(MSG_PKG_HAS_DEPENDS, target_name, depends_str);

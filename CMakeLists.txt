@@ -32,6 +32,8 @@ add_executable(cross-pkg src/main.cpp
         src/commands/install.hpp
         src/commands/remove.cpp
         src/commands/remove.hpp
+        src/commands/orphans.cpp
+        src/commands/orphans.hpp
 )
 
 install(TARGETS cross-pkg DESTINATION bin)
