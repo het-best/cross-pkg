@@ -59,7 +59,9 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
     std::cout << PREFIX << "Package description: " << CYAN_COL << info->desc << "\n";
     std::cout << PREFIX << "Package version: " << CYAN_COL << info->version << "\n";
 
-    std::cout << PREFIX << "Package sources: " << CYAN_COL;
+
+    // Sources
+    std::string final_str;
     for (const auto& [type, url, output] : info->sources)
     {
         std::string src_prefix;
@@ -74,10 +76,19 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
                 break;
         }
 
-        std::cout << src_prefix << url << (std::get<0>(info->sources.back()) == type ? WHITE_COL : ", ");
+        final_str += src_prefix + url + ", ";
     }
 
-    std::cout << "\n" << PREFIX << "Package dependencies: " << CYAN_COL;
+    if (final_str.empty())
+        std::cout << PREFIX << "Package sources: " << CYAN_COL << "None" << WHITE_COL << "\n";
+    else
+    {
+        final_str.erase(final_str.length() - 2);
+        std::cout << PREFIX << "Package sources: " << CYAN_COL << final_str << WHITE_COL << "\n";
+    }
+
+
+    std::cout << PREFIX << "Package dependencies: " << CYAN_COL << "\n";
     for (const std::string& depend : info->depends)
     {
         std::cout << depend << (info->depends.back() == depend ? WHITE_COL : ", ");
@@ -85,7 +96,7 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
 
 
     // Dependents
-    std::string final_str;
+    final_str = "";
     for (const std::filesystem::path path : std::filesystem::directory_iterator(INSTALL_PATH))
     {
         std::optional<pkg_info> pkg_info = get_pkg_info(path.string() + "/config.crs", false);
@@ -97,11 +108,11 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
     }
 
     if (final_str.empty())
-        std::cout << "\n" << PREFIX << "Package dependents: " << CYAN_COL << "None" << WHITE_COL << "\n";
+        std::cout << PREFIX << "Package dependents: " << CYAN_COL << "None" << WHITE_COL << "\n";
     else
     {
         final_str.erase(final_str.length() - 2);
-        std::cout << "\n" << PREFIX << "Package dependents: " << CYAN_COL << final_str << WHITE_COL << "\n";
+        std::cout << PREFIX << "Package dependents: " << CYAN_COL << final_str << WHITE_COL << "\n";
     }
 
 
@@ -128,10 +139,14 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
     final_str = "";
 
     uint i = 0;
+    bool cutted = false;
+
     while(getline(man_file, line))
     {
         if (all_owned || i <= 5)
             final_str += line + ", ";
+        else
+            cutted = true;
 
         owned_size += std::filesystem::file_size(line);
         i++;
@@ -153,7 +168,7 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
             owned_size_str = round_up_str(owned_size / 1024.0f / 1024.0f / 1024.0f) + "GB";
 
         final_str.erase(final_str.length() - 2);
-        if (!all_owned)
+        if (cutted)
             final_str += "...";
 
         std::cout << PREFIX << "Owned files: " << CYAN_COL << final_str << WHITE_COL << "\n";

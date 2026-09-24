@@ -209,7 +209,7 @@ const std::array remove_msgs =
 
 const std::array search_msgs =
 {
-    ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" wasn't found, maybe you need to update " + MAG_COL + "$CROSS_PATH" + WHITE_COL + "\n",
+    ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" wasn't found\n",
     ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" configure file needs to have " + CYAN_COL  + ".crs" + WHITE_COL + " extension\n",
     ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" configure file wasn't found\n",
     ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" configure file doesnt have " + CYAN_COL + "-{ARG2}-" + WHITE_COL + " field\n",
