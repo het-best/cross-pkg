@@ -172,13 +172,13 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                         print_msg(MSG_PKG_GIT_COMMIT, target_name, source);
 
 
-                    if (!exec_cmd("git clone " + splitted_source.front() + " " + target_cache + "source"))
+                    if (!exec_cmd("git clone " + splitted_source.front() + " " + target_cache + "source/" + output))
                     {
                         print_msg(MSG_PKG_DOWN_FAIL, splitted_source.front());
                         return false;
                     }
 
-                    exec_cmd("(cd " + target_cache + "source && git checkout " + splitted_source.back() + " " + target_cache + "source)");
+                    exec_cmd("(cd " + target_cache + "source/ " + output + " && git checkout " + splitted_source.back() + " " + target_cache + "source/" + output + ")");
                 }
                 else
                 {
