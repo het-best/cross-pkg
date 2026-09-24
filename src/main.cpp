@@ -30,6 +30,7 @@
 #include "commands/download.hpp"
 #include "commands/search.hpp"
 #include "commands/install.hpp"
+#include "commands/orphans.hpp"
 #include "commands/remove.hpp"
 #include "commands/update.hpp"
 
@@ -187,6 +188,8 @@ int main(const int argc, char* argv[])
     }
     else if (command == "list" || command == "l")
         c_list();
+    else if (command == "orphans" || command == "o")
+        c_orphans();
     else if (command == "remove" || command == "r")
     {
         if (args.empty())

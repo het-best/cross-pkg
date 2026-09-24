@@ -111,10 +111,11 @@ enum msg_type
     MSG_DOWN_INFO = 903,
     MSG_INSTALL_INFO = 904,
     MSG_LIST_INFO = 905,
-    MSG_REMOVE_INFO = 906,
-    MSG_SEARCH_INFO = 907,
-    MSG_UPDATE_INFO = 908,
-    MSG_VERSION_INFO = 909,
+    MSG_ORPHANS_INFO = 906,
+    MSG_REMOVE_INFO = 907,
+    MSG_SEARCH_INFO = 908,
+    MSG_UPDATE_INFO = 909,
+    MSG_VERSION_INFO = 910,
 };
 
 
@@ -244,6 +245,7 @@ const std::array help_msgs =
     PREFIX + BLUE_COL + "download " + WHITE_COL + "Downloads package sources\n",
     PREFIX + BLUE_COL + "install  " + WHITE_COL + "Installs package\n",
     PREFIX + BLUE_COL + "list     " + WHITE_COL + "Prints out information about installed packages and their versions\n",
+    PREFIX + BLUE_COL + "orphans  " + WHITE_COL + "Prints out all packages without dependents\n",
     PREFIX + BLUE_COL + "remove   " + WHITE_COL + "Removes package\n",
     PREFIX + BLUE_COL + "search   " + WHITE_COL + "Prints out information about package\n",
     PREFIX + BLUE_COL + "update   " + WHITE_COL + "Updates all packages and fetches their latest versions from the repos\n",

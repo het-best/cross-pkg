@@ -58,3 +58,4 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
 
 std::string get_target_path(const std::string& target);
 std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, bool print_log = true);
+std::string get_pkg_dependents(const std::string &target);

@@ -212,7 +212,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 
 
         if (std::filesystem::exists(target_cache + "tmp"))
-            exec_cmd("mv " + target_cache + "tmp/* " + target_cache + "/install/etc/");
+            exec_cmd("mv " + target_cache + "tmp/* " + target_cache + "/install/etc/ 2>/dev/null");
 
         if (number.first.empty())
             print_msg(MSG_PKG_INSTALLED, target_name, std::to_string(i + 1) + "/" + std::to_string(targets.size()));

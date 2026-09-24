@@ -106,17 +106,7 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
 
 
     // Dependents
-    final_str = "";
-    for (const std::filesystem::path path : std::filesystem::recursive_directory_iterator("/usr/repos"))
-    {
-        if (is_directory(path))
-            continue;
-
-        std::optional<pkg_info> pkg_info = get_pkg_info(path.string(), false);
-
-        if (std::ranges::find(pkg_info->depends, target) != pkg_info->depends.end())
-            final_str += pkg_info->name + ", ";
-    }
+    final_str = get_pkg_dependents(target);
 
     if (final_str.empty())
         std::cout << PREFIX << "Package dependents: " << CYAN_COL << "None" << WHITE_COL << "\n";
@@ -154,6 +144,9 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
 
     while(getline(man_file, line))
     {
+        if (!std::filesystem::exists(line))
+            continue;
+
         if (all_owned || i <= 5)
             final_str += line + ", ";
         else
@@ -404,4 +397,21 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
 
 
     return info;
+}
+
+std::string get_pkg_dependents(const std::string &target)
+{
+    std::string depends_str = "";
+
+    for (const std::filesystem::path path : std::filesystem::directory_iterator(INSTALL_PATH))
+    {
+        std::optional<pkg_info> pkg_info = get_pkg_info(path.string() + "/config.crs", false);
+        if (!pkg_info.has_value())
+            continue;
+
+        if (std::ranges::find(pkg_info->depends, target) != pkg_info->depends.end())
+            depends_str += pkg_info->name + ", ";
+    }
+
+    return depends_str;
 }
