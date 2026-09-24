@@ -112,7 +112,7 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
         if (is_directory(path))
             continue;
 
-        std::optional<pkg_info> pkg_info = get_pkg_info(path.string());
+        std::optional<pkg_info> pkg_info = get_pkg_info(path.string(), false);
 
         if (std::ranges::find(pkg_info->depends, target) != pkg_info->depends.end())
             final_str += pkg_info->name + ", ";

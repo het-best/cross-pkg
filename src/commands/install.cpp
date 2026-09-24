@@ -32,7 +32,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 {
     // Checking flags
     bool verbose = false;
-    std::string install_path = "/";
+    std::string install_path = "";
 
     for (const auto& [flag, arg] : flags)
     {
@@ -169,23 +169,12 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
         // Checking for already existing config files in /etc
         if (std::filesystem::exists(target_cache + "install/etc"))
         {
-            const uint parent_path_size = std::string(target_cache + "install/etc").length();
+            if (std::filesystem::exists(target_cache + "tmp"))
+                exec_cmd("rm -r " + target_cache + "tmp");
+            exec_cmd("mkdir " + target_cache + "tmp");
 
-            for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install/etc"))
-            {
-                if (is_directory(entry))
-                    continue;
-
-                const std::string filepath = entry.string();
-
-                if (std::filesystem::exists(install_path + "/" + std::string(filepath.begin() + parent_path_size, filepath.end())))
-                {
-                    if (verbose)
-                        exec_cmd(SU_CMD + "rm -v " + entry.string());
-                    else
-                        exec_cmd(SU_CMD + "rm " + entry.string());
-                }
-            }
+            exec_cmd("(cd " + target_cache + "install/etc && find . -type f -exec sh -c 'if [ -e \"" + install_path + "/etc/$1\" ]; then mkdir -p \"" + target_cache +
+                "tmp/$(dirname \"$1\")\" && mv -v \"" + target_cache + "install/etc/$1\" \"" + target_cache + "tmp/$1\"; fi' _ {} \\;) 2>/dev/null");
         }
 
 
@@ -220,6 +209,10 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
             exec_cmd(cpv_cmd + target_cache + "install/* " + install_path + "/");
         else
             exec_cmd(cp_cmd + target_cache + "install/* " + install_path + "/ 2>/dev/null");
+
+
+        if (std::filesystem::exists(target_cache + "tmp"))
+            exec_cmd("mv " + target_cache + "tmp/* " + target_cache + "/install/etc/");
 
         if (number.first.empty())
             print_msg(MSG_PKG_INSTALLED, target_name, std::to_string(i + 1) + "/" + std::to_string(targets.size()));
