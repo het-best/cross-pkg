@@ -100,6 +100,7 @@ enum msg_type
     MSG_UPDATE_FAIL = 808,
 
     MSGV_PKG_FETCH = 809,
+    MSGV_CROSS_LICENSE = 810,
 
     // 900 - 999 Help
     MSG_CROSS_CMDS = 900,
@@ -214,7 +215,7 @@ const std::array search_msgs =
 
 const std::array update_msgs =
 {
-    PREFIX + "Cross-pkg v" + CROSS_VERSION + "\n",
+    PREFIX + "cross-pkg v" + CROSS_VERSION + "\n",
     PREFIX + "Cross can be updated! " + ORANGE_COL + CROSS_VERSION + WHITE_COL + " -> " + GREEN_COL + "{ARG1}" + WHITE_COL + "\n",
     PREFIX + "Fetching packages for updates...\n",
     PREFIX + GREEN_COL + "No packages require update!" + WHITE_COL + "\n",
@@ -225,6 +226,10 @@ const std::array update_msgs =
     PREFIX + "Update failed\n",
 
     PKG_PREFIX + "Fetching package...\n",
+    ORANGE_COL + "\ncross-pkg  Copyright (C) 2026 Het Best\n" +
+    "This program comes with ABSOLUTELY NO WARRANTY.\n" +
+    "This is free software, and you are welcome to redistribute it\n" +
+    "under certain conditions." + WHITE_COL + "\n",
 };
 
 const std::array help_msgs =

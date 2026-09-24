@@ -62,7 +62,7 @@ Example package script
     -desc-
         Modern source based package manager for GNU/Linux written in C++ 20.
     -version-
-        1.0.0
+        1.0
     -sources-
         url+https://github.com/het-best/cross-pkg
     -depends-
