@@ -47,6 +47,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
     bool force_download = false;
     bool preserve_src = false;
     bool skip_download = false;
+    bool skip_strip = false;
     bool verbose = false;
 
     std::string install_path = "/";
@@ -55,7 +56,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
     {
         switch (flag)
         {
-            case 'a':
+            case 'p':
                 always_show_paths = true;
                 std::cout << FLAG_PREFIX << "Always showing paths is enabled" << WHITE_COL << "\n";
                 break;
@@ -63,11 +64,11 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
                 autoyes = true;
                 std::cout << FLAG_PREFIX << "Autoyes is enabled" << WHITE_COL << "\n";
                 break;
-            case 'b':
+            case 'r':
                 build_params = false;
-                std::cout << FLAG_PREFIX << "Adding standart build params is disabled" << WHITE_COL << "\n";
+                std::cout << FLAG_PREFIX << "Adding standard build params is disabled" << WHITE_COL << "\n";
                 break;
-            case 'd':
+            case 'c':
                 depends_disable = true;
                 std::cout << FLAG_PREFIX << "Depends checking is disabled" << WHITE_COL << "\n";
                 break;
@@ -95,17 +96,21 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
                     std::cout << FLAG_PREFIX << "Packages will be installed to: " << BLUE_COL << arg << WHITE_COL << "\n";
                 }
                 break;
-            case 'r':
+            case 'f':
                 force_download = true;
                 std::cout << FLAG_PREFIX << "Force source download is enabled" << WHITE_COL << "\n";
                 break;
-            case 'p':
+            case 'u':
                 preserve_src = true;
                 std::cout << FLAG_PREFIX << "Source preservation is enabled" << WHITE_COL << "\n";
                 break;
-            case 's':
+            case 'd':
                 skip_download = true;
                 std::cout << FLAG_PREFIX << "Skipping downloading is enabled" << WHITE_COL << "\n";
+                break;
+            case 's':
+                skip_strip = true;
+                std::cout << FLAG_PREFIX << "Skipping striping is enabled" << WHITE_COL << "\n";
                 break;
             case 'v':
                 verbose = true;
@@ -257,9 +262,9 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
     if (!skip_download)
     {
         if (force_download)
-            tmp_args.push_back({'r', ""});
+            tmp_args.push_back({'f', ""});
         if (preserve_src)
-            tmp_args.push_back({'p', ""});
+            tmp_args.push_back({'u', ""});
         if (verbose)
             tmp_args.push_back({'v', ""});
 
@@ -335,6 +340,18 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
         {
             print_msg(MSG_PKG_BUILD_FAIL);
             return false;
+        }
+
+        // Striping binaries
+        if (!skip_strip)
+        {
+            if (verbose)
+                print_msg(MSGV_BUILD_STRIP);
+
+            for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
+            {
+                exec_cmd("strip --strip-unneeded " + entry.string() + " 2>/dev/null");
+            }
         }
 
 

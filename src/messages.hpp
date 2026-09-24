@@ -38,7 +38,8 @@ enum msg_type
 
     MSGV_GET_IMP_TARGETS = 116,
     MSGV_BUILD_ARGS = 117,
-    MSGV_TIMES_WRITE = 118,
+    MSGV_BUILD_STRIP = 118,
+    MSGV_TIMES_WRITE = 119,
 
     // 200 - 299 Clear
     MSG_CACHE_CLEAR_NO_PKGS = 200,
@@ -150,6 +151,7 @@ const std::array build_msgs =
 
     PREFIX + "Getting implicit targets\n",
     PKG_PREFIX + "Build arguments: " + CYAN_COL + "{ARG2}" + WHITE_COL + "\n",
+    PKG_PREFIX + "Striping compiled binaries\n",
     PREFIX + "Writing build times\n",
 };
 
