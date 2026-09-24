@@ -35,31 +35,71 @@ size_t curl_write_call(char *ptr, size_t size, size_t nmemb, void *stream)
     return fwrite(ptr, size, nmemb, (FILE *)stream);
 }
 
-struct myprogress
+struct curl_prog_str
 {
-  curl_off_t lastruntime;
-  CURL *curl;
+    curl_off_t lastruntime;
+    CURL *curl;
 };
  
-static int curl_progress(void *p, curl_off_t dltotal, curl_off_t dlnow,
-                    curl_off_t ultotal, curl_off_t ulnow)
+int curl_progress(void *p, curl_off_t down_total, curl_off_t down_now, curl_off_t up_total, curl_off_t up_now)
 {
-    if (dltotal <= 0)
-        return 0;
+    // Make so if server did not respond yet it will be 0%
+    if (down_total <= 0)
+    {
+        down_total = UINT_MAX;
+        down_now = 0;
+    }
+
+    
+    // Setup
+    const curl_prog_str* progress = static_cast<curl_prog_str*>(p);
 
     const uint progress_width = 40;
-    const float fraction = dlnow / static_cast<float>(dltotal);
-    int filled = static_cast<int>(progress_width * fraction);
+    const float fraction = down_now / static_cast<float>(down_total);
+    const uint filled = static_cast<int>(progress_width * fraction);
+    
+
+    // Getting download speed
+    curl_off_t speed = 0;
+    curl_easy_getinfo(progress->curl, CURLINFO_SPEED_DOWNLOAD_T, &speed);
+
+    std::string speed_str = std::to_string(speed) + "B/s ";
+
+    if (speed >= 1024 * 1024 * 1024)
+        speed_str = round_up_str(speed / 1024 / 1024 / 1024.0f, 2) + "GB/s ";
+    else if (speed >= 1024 * 1024)
+        speed_str = round_up_str(speed / 1024 / 1024.0f, 2) + "MB/s ";
+    else if (speed >= 1024)
+        speed_str = round_up_str(speed / 1024.0f, 2) + "KB/s ";
+
+
+    // Getting estimated time
+    const uint est_time = (down_total - down_now) / static_cast<float>(speed);
+    std::string est_time_str;
+
+    if (est_time <= 3600)
+    {
+        std::string est_time_s = std::to_string(est_time % 60);
+        
+        est_time_str = std::to_string(est_time / 60) + ":";
+        
+        if (est_time_s.length() == 1)
+            est_time_str += "0";
+        
+        est_time_str += est_time_s; 
+    }
+    else
+        est_time_str = ">1:00:00";
 
 
     // Progress bar
     std::ostringstream bar;
-    bar << '\r' << '[';
+    bar << '\r' << '[' << GREEN_COL;
 
     for (int i = 0; i < progress_width; i++)
-        bar << (i == filled  ?  (WHITE_COL + '>') : (i < filled ? (GREEN_COL + "=") : "-"));
+        bar << (i == filled  ?  (">" + WHITE_COL) : (i < filled ? "=" : "-"));
 
-    bar << "] " << std::setw(3) << static_cast<int>(fraction * 100) << "%";
+    bar << "] " << std::setw(3) << static_cast<int>(fraction * 100) << "% " << CYAN_COL << speed_str << ORANGE_COL << est_time_str << "\033[K";
 
 
     // Flushing
@@ -74,7 +114,7 @@ bool url_download(const std::string& url, const std::string& path, const std::st
     CURL* curl = curl_easy_init();
     if (!curl)
     {
-        // TODO print_msg
+        print_msg(MSG_PKG_CURL_FAIL_SRC);
         return false;
     }
 
@@ -83,23 +123,23 @@ bool url_download(const std::string& url, const std::string& path, const std::st
     FILE* file = fopen((path + url_name).c_str() , "wb");
     if (!file)
     {
-        // TODO print_msg
+        print_msg(MSG_PKG_FILE_FAIL_SRC);
         curl_easy_cleanup(curl);
         return false;
     }
 
 
     // Downloading params
-    struct myprogress prog(0, curl); 
+    curl_prog_str progress(0, curl); 
 
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_call);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
     curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(curl, CURLOPT_FAILONERROR, 1L);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 30L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 30L);
     curl_easy_setopt(curl, CURLOPT_XFERINFOFUNCTION, curl_progress);
-    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &prog);
+    curl_easy_setopt(curl, CURLOPT_XFERINFODATA, &progress);
     curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 0L);
 
 
