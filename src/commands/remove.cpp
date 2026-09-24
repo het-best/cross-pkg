@@ -98,12 +98,11 @@ void c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
         while(getline(file, line))
         {
             if (verbose)
-                exec_cmd(SU_CMD + " rm -fv " + line);
+                exec_cmd(SU_CMD + " rm -fv '" + line + "'");
             else
-                exec_cmd(SU_CMD + " rm -f " + line);
+                exec_cmd(SU_CMD + " rm -f '" + line + "'");
         }
         file.close();
-
 
         if (verbose)
             exec_cmd(SU_CMD + " rm -rfv " + target_path);

@@ -35,3 +35,4 @@ add_executable(cross-pkg src/main.cpp
 )
 
 install(TARGETS cross-pkg DESTINATION bin)
+#target_link_options(cross-pkg PRIVATE -static-libgcc -static-libstdc++)

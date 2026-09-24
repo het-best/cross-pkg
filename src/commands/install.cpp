@@ -57,7 +57,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
                         continue;
                     }
 
-                    if (install_path.back() == '/')
+                    if (arg.back() == '/')
                         install_path = std::string(arg.begin(), arg.end() - 1);
 
                     if (!hide_flags_msg)
@@ -166,7 +166,33 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
         exec_cmd(SU_CMD + " cp " + target_cache  + "manifest " + target_ins_path);
 
 
+        // Checking for already existing config files in /etc
+        if (std::filesystem::exists(target_cache + "install/etc"))
+        {
+            const uint parent_path_size = std::string(target_cache + "install/etc").length();
+
+            for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install/etc"))
+            {
+                if (is_directory(entry))
+                    continue;
+
+                const std::string filepath = entry.string();
+
+                if (std::filesystem::exists(install_path + "/" + std::string(filepath.begin() + parent_path_size, filepath.end())))
+                {
+                    if (verbose)
+                        exec_cmd(SU_CMD + "rm -v " + entry.string());
+                    else
+                        exec_cmd(SU_CMD + "rm " + entry.string());
+                }
+            }
+        }
+
+
         // Copying files
+        const std::string cpv_cmd = SU_CMD + " cp -rv --remove-destination ";
+        const std::string cp_cmd = SU_CMD + " cp -r --remove-destination ";
+
         for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
         {
             const std::string full_path = entry.string();
@@ -185,15 +211,15 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
             }
 
             if (verbose)
-                exec_cmd(SU_CMD + " cp -rv --remove-destination " + full_path + " " + relative_path + "/");
+                exec_cmd(cpv_cmd + full_path + " " + relative_path + "/");
             else
-                exec_cmd(SU_CMD + " cp -r --remove-destination " + full_path + " " + relative_path + "/");
+                exec_cmd(cp_cmd + full_path + " " + relative_path + "/ 2>/dev/null");
         }
 
         if (verbose)
-            exec_cmd(SU_CMD + " cp -rv --remove-destination " + target_cache + "install/* " + install_path + "/");
+            exec_cmd(cpv_cmd + target_cache + "install/* " + install_path + "/");
         else
-            exec_cmd(SU_CMD + " cp -r --remove-destination " + target_cache + "install/* " + install_path + "/");
+            exec_cmd(cp_cmd + target_cache + "install/* " + install_path + "/ 2>/dev/null");
 
         if (number.first.empty())
             print_msg(MSG_PKG_INSTALLED, target_name, std::to_string(i + 1) + "/" + std::to_string(targets.size()));

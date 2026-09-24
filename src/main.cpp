@@ -152,9 +152,12 @@ int main(const int argc, char* argv[])
         }
 
         if (!c_build(args, flags))
+        {
             print_msg(MSG_BUILD_ABORTING);
-        else
-            print_msg(MSG_BUILD_SUC);
+            return 1;
+        }
+
+        print_msg(MSG_BUILD_SUC);
     }
     else if (command == "clear" || command == "c")
         c_clear(flags);
