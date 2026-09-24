@@ -50,7 +50,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
     bool skip_strip = false;
     bool verbose = false;
 
-    std::string install_path = "/";
+    std::string install_path = "";
 
     for (const auto& [flag, arg] : flags)
     {
