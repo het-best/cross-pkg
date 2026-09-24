@@ -57,7 +57,7 @@ Also git+ prefix can have @ symbol with commit has after it to checkout to requi
 `Optional` Package dependencies, one package per line
 
 ### -rebuild-depends-
-`Optional` Packages that needs to be rebuilded after build this package, same syntax as -depends-
+`Optional` Packages that needs to be rebuilded after building this package, same syntax as -depends-
 
 ### -before-build-
 `Optional` Script to run before building
