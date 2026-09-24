@@ -12,7 +12,6 @@
 #include "cmd.hpp"
 #include "defines.hpp"
 #include "messages.hpp"
-#include "split.hpp"
 #include "commands/download.hpp"
 #include "commands/search.hpp"
 #include "commands/install.hpp"
