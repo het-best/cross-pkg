@@ -357,6 +357,24 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
             }
             i--;
         }
+        else if (line == "-rebuild-depends-")
+        {
+            for(; i < lines.size(); i++)
+            {
+                line = lines[i];
+                if (line.empty())
+                    continue;
+
+                if (line.front() == '-' && line.back() == '-')
+                    break;
+
+
+                // If commented
+                if (line.front() != '#')
+                    info.rebuild_depends.push_back(line);
+            }
+            i--;
+        }
         else if (line == "-before-build-" || line == "-build-" || line == "-after-install-")
         {
             // So that 3 if statements can be reduced to one

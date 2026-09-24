@@ -87,6 +87,7 @@ void c_help(const std::string &target)
     else if (target == "remove")
     {
         print_msg(MSG_REMOVE_INFO);
+        std::cout << CYAN_COL << " -F " << WHITE_COL << "Disables dependents checking\n";
         std::cout << CYAN_COL << " -V " << WHITE_COL << "Enables verbose output\n";
     }
     else if (target == "search")

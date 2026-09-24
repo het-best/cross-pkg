@@ -33,12 +33,17 @@
 void c_remove(const std::vector<std::string> &targets, const std::vector<std::pair<char, std::string>> &flags)
 {
     // Checking flags
+    bool force = false;
     bool verbose = false;
 
     for (const auto& [flag, arg] : flags)
     {
         switch (flag)
         {
+            case 'f':
+                force = true;
+                std::cout << FLAG_PREFIX << "Force removing is enabled" << WHITE_COL << "\n";
+                break;
             case 'v':
                 verbose = true;
                 std::cout << FLAG_PREFIX << "Verbose output is enabled" << WHITE_COL << "\n";
@@ -63,13 +68,16 @@ void c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 
 
         // Checking dependents
-        print_msg(MSG_PKG_CHECK_DEL, target_name);
-
-        if (std::string depends_str = get_pkg_dependents(target_name); depends_str != "")
+        if (!force)
         {
-            depends_str.erase(depends_str.length() - 2);
-            print_msg(MSG_PKG_HAS_DEPENDS, target_name, depends_str);
-            return;
+            print_msg(MSG_PKG_CHECK_DEL, target_name);
+
+            if (std::string depends_str = get_pkg_dependents(target_name); depends_str != "")
+            {
+                depends_str.erase(depends_str.length() - 2);
+                print_msg(MSG_PKG_HAS_DEPENDS, target_name, depends_str);
+                return;
+            }
         }
 
 

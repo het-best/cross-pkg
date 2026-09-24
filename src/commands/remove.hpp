@@ -16,6 +16,7 @@
 /* remove - Removes package
  *
  * Flags:
+ * -F Disables dependents checking
  * -V Enables verbose output
  */
 
