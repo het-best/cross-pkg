@@ -20,12 +20,13 @@
 
 
 
-#define CROSS_VERSION "1.6"
+#define CROSS_VERSION "1.7"
 
 #define MAIN_PATH "/var/db/cross/"
 #define INSTALL_PATH "/var/db/cross/install/"
 #define CACHE_PATH "/var/db/cross/cache/"
 #define MIRRORS_PATH "/var/db/cross/mirrors/"
+#define REPOS_PATH "/usr/repos/"
 
 #define CFLAGS "-D_FORTIFY_SOURCE=2 -fstack-protector-strong -O2 -pipe -march=native"
 #define BUILD_ARGS "CFLAGS=\"" CFLAGS "\" CXXFLAGS=\"$CFLAGS\" MAKEFLAGS=\"-j" + std::to_string(std::thread::hardware_concurrency()) + "\""

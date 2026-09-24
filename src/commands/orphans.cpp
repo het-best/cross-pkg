@@ -28,7 +28,7 @@ void c_orphans()
 {
     std::vector<std::filesystem::path> packages;
 
-    for (const std::filesystem::path path : std::filesystem::recursive_directory_iterator("/usr/repos/"))
+    for (const std::filesystem::path path : std::filesystem::recursive_directory_iterator(REPOS_PATH))
     {
         const std::string path_str = path.string();
         if (is_directory(path) || path_str.find("utils") != std::string::npos || path_str.find("compilers") != std::string::npos)

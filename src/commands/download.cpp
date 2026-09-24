@@ -94,7 +94,7 @@ int curl_progress(void *p, curl_off_t down_total, curl_off_t down_now, curl_off_
 
     // Progress bar
     std::ostringstream bar;
-    bar << '\r' << '[' << GREEN_COL;
+    bar << '\r' << WHITE_COL << '[' << GREEN_COL;
 
     for (int i = 0; i < progress_width; i++)
         bar << (i == filled  ?  (">" + WHITE_COL) : (i < filled ? "=" : "-"));
@@ -132,6 +132,10 @@ bool url_download(const std::string& url, const std::string& path, const std::st
     // Downloading params
     curl_prog_str progress(0, curl); 
 
+    struct curl_slist *headers = NULL;
+    headers = curl_slist_append(headers, "Accept: */*");
+    curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_call);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
@@ -144,14 +148,24 @@ bool url_download(const std::string& url, const std::string& path, const std::st
 
 
     // Downloading
-    bool result = curl_easy_perform(curl) == CURLE_OK;
+    const CURLcode result = curl_easy_perform(curl);
     
-    std::cerr << '\n';
+    if(result != CURLE_OK)
+    {
+        std::cout << curl_easy_strerror(result) << "\n";
+
+            long response_code;
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
+        std::cout << response_code << "\n";
+
+    }
+
+    std::cerr << "\n";
     fclose(file);
     curl_easy_cleanup(curl);
 
 
-    return result;
+    return result == CURLE_OK;
 }
 #else
 bool url_download(const std::string& url, const std::string& path, const std::string& url_name)
@@ -212,10 +226,10 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
             print_msg(MSGV_PKG_CHECK_CACHE, target_name);
 
         if (!std::filesystem::exists(target_cache))
-            exec_cmd("mkdir " + target_cache);
+            std::filesystem::create_directory(target_cache);
         if (std::filesystem::exists(target_cache + "install"))
-            exec_cmd("rm -rf " + target_cache + "install");
-        exec_cmd("mkdir " + target_cache + "install");
+            std::filesystem::remove_all(target_cache + "install");
+        std::filesystem::create_directory(target_cache + "install");
 
         if (verbose)
             exec_cmd("cp -rva " + target_path + "* " + target_cache);
@@ -238,9 +252,9 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
         if (preserve_src && std::filesystem::exists(target_cache + "source"))
             continue;
         if (!preserve_src && std::filesystem::exists(target_cache + "source"))
-            exec_cmd("rm -rf " + target_cache + "source");
+            std::filesystem::remove_all(target_cache + "source");
         if (!std::filesystem::exists(target_cache + "source"))
-            exec_cmd("mkdir " + target_cache + "source");
+            std::filesystem::create_directory(target_cache + "source");
 
 
         for (const auto& [prefix, source, output] : info->sources)
@@ -288,17 +302,10 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                 print_msg(MSG_PKG_DOWN_FAIL, source);
                 return false;
             }
-            else if (prefix == SRC_GIT)
+            else if (prefix == SRC_GIT) 
             {
-                // Checking
-                if (std::filesystem::exists(target_cache + "git-source") && !force_download)
-                {
-                    print_msg(MSG_PKG_ALR_DOWN, target_name, source);
-                    continue;
-                }
-
-
-                print_msg(MSG_PKG_DOWN_SRC, target_name, source);
+                std::string commit = "git-source";
+                std::string git_source = source;
 
                 if (source.find("@") != std::string::npos)
                 {
@@ -307,23 +314,34 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                     if (splitted_source.size() > 2)
                         print_msg(MSG_PKG_GIT_COMMIT, target_name, source);
 
-
-                    if (!exec_cmd("git clone --recurse-submodules " + splitted_source.front() + " " + target_cache + "git-source/" + output))
-                    {
-                        print_msg(MSG_PKG_DOWN_FAIL, splitted_source.front());
-                        return false;
-                    }
-
-                    exec_cmd("(cd " + target_cache + "git-source/ " + output + " && git checkout " + splitted_source.back() + " " + target_cache + "git-source/" + output + ")");
+                    commit = splitted_source.back();
+                    git_source = splitted_source.front();
                 }
-                else
+
+
+                // Checking
+                if (std::filesystem::exists(target_cache + commit))
                 {
-                    if (!exec_cmd("git clone --recurse-submodules " + source + " " + target_cache + "git-source"))
+                    if (!force_download)
                     {
-                        print_msg(MSG_PKG_DOWN_FAIL, source);
-                        return false;
+                        print_msg(MSG_PKG_ALR_DOWN, target_name, source);
+                        continue;
                     }
+
+                    std::filesystem::remove_all(target_cache + commit);
                 }
+
+
+                print_msg(MSG_PKG_DOWN_SRC, target_name, source);
+
+                if (!exec_cmd("git clone --recurse-submodules " + git_source + " " + target_cache + commit + "/" + output))
+                {
+                    print_msg(MSG_PKG_DOWN_FAIL, git_source);
+                    return false;
+                }
+
+                if (commit != "git-source")
+                    exec_cmd("(cd " + target_cache + commit + "/ " + output + " && git checkout " + commit + " " + target_cache + commit + "/" + output + ")");
             }
         }
         extract:
@@ -346,7 +364,7 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                 }
 
                 if (!std::filesystem::exists(target_cache + "source/" + output))
-                    exec_cmd("mkdir " + target_cache + "source/" + output);
+                    std::filesystem::create_directory(target_cache + "source/" + output);
 
                 if (verbose)
                     exec_cmd("tar -xvf" + target_cache + source_name + " -C" + target_cache + "source/" + output + " --strip-components=1");
@@ -354,7 +372,14 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                     exec_cmd("tar -xf" + target_cache + source_name + " -C" + target_cache + "source/" + output + " --strip-components=1");
             }
             else if (prefix == SRC_GIT)
-                exec_cmd("cp -a " + target_cache + "git-source/. " + target_cache + "source");
+            {
+                std::string commit = "git-source";
+
+                if (source.find("@") != std::string::npos)
+                    commit = split(source, "@").back();
+                
+                exec_cmd("cp -a " + target_cache + commit + "/. " + target_cache + "source");
+            }
         }
     }
 

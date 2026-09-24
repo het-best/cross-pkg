@@ -31,6 +31,12 @@
 
 void c_update(const std::vector<std::pair<char, std::string>> &flags)
 {
+#ifndef DEV_MODE
+    print_msg(MSG_DEV_MODE);
+
+    return;
+#endif
+
     // Checking for arguments
     bool autoyes = false;
     bool verbose = false;
@@ -118,104 +124,6 @@ void c_update(const std::vector<std::pair<char, std::string>> &flags)
         print_msg(MSG_CONTINUE);
         std::cin.ignore();
     }
-
-
-    // Changing packages info
-    std::vector<std::string> build_targets;
-    build_targets.reserve(sources_to_upd.size() - manual_update);
-
-    for (const auto& [current_info, url, version, name] : sources_to_upd)
-    {
-        if (url == "Unsupported provider")
-            continue;
-
-
-        std::string target_path = get_target_path(name);
-
-
-        // Making config string
-        std::string config_str;
-
-        config_str += "-desc-\n\t" + current_info.desc + "\n";
-        config_str += "-version-\n\t" + version + "\n";
-
-        config_str += "-sources-\n";
-        for (const std::tuple<source_type, std::string, std::string>& source : current_info.sources)
-        {
-            if (source == current_info.sources.front())
-            {
-                config_str += "\turl+" + url + "\n";
-                continue;
-            }
-
-            std::string prefix;
-            if (std::get<0>(source) == SRC_URL)
-                prefix = "url";
-            else if (std::get<0>(source) == SRC_GIT)
-                prefix = "git";
-
-            config_str += "\t" + prefix + "+" + std::get<1>(source) + " " + std::get<2>(source) + "\n";
-        }
-
-        if (!current_info.depends.empty())
-        {
-            config_str += "-depends-\n";
-            for (const std::string& depend : current_info.depends)
-            {
-                config_str += "\t" + depend + "\n";
-            }
-        }
-
-        if (!current_info.bef_build.empty())
-        {
-            config_str += "-before-build-\n";
-            for (const std::string& build_str : split(current_info.bef_build, "\n"))
-            {
-                if (build_str != "#!/bin/sh -e")
-                    config_str += "\t" + build_str + "\n";
-            }
-        }
-
-        config_str += "-build-\n";
-        for (const std::string& build_str : split(current_info.build, "\n"))
-        {
-            if (build_str != "#!/bin/sh -e")
-                config_str += "\t" + build_str + "\n";
-        }
-
-        if (!current_info.aft_install.empty())
-        {
-            config_str += "-after-install-\n";
-            for (const std::string& build_str : split(current_info.aft_install, "\n"))
-            {
-                if (build_str != "#!/bin/sh -e")
-                    config_str += "\t" + build_str + "\n";
-            }
-        }
-
-
-        // Writing data
-        exec_cmd("rm " + target_path);
-        std::ofstream file(config_str);
-        file << config_str;
-        file.close();
-
-
-        build_targets.push_back(name);
-    }
-
-
-    // Building
-    std::vector<std::pair<char, std::string>> tmp_flags;
-    if (autoyes)
-        tmp_flags.push_back({'y', ""});
-    if (verbose)
-        tmp_flags.push_back({'v', ""});
-
-    if (c_build(build_targets, tmp_flags))
-        print_msg(MSG_UPDATE_SUCC);
-    else
-        print_msg(MSG_UPDATE_FAIL);
 }
 
 
