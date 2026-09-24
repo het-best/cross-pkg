@@ -98,6 +98,7 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
             continue;
         if (!preserve_src && std::filesystem::exists(target_cache + "source"))
             exec_cmd("rm -rf " + target_cache + "source");
+        exec_cmd("mkdir " + target_cache + "source");
 
 
         for (const auto& [prefix, source, output] : info->sources)
@@ -168,14 +169,23 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
 
         for (const auto& [prefix, source, output] : info->sources)
         {
+            const std::string source_name = split(source, "/").back();
+
+
             if (prefix == SRC_URL)
             {
+                if (!exec_cmd("tar -atf " + target_cache + source_name + " > /dev/null 2>&1"))
+                {
+                    exec_cmd("cp " + target_cache + source_name + " " + target_cache + "source/" + output);
+                    continue;
+                }
+
                 exec_cmd("mkdir " + target_cache + "source/" + output);
 
                 if (verbose)
-                    exec_cmd("tar -xvf" + target_cache + split(source, "/").back() + " -C" + target_cache + "source/" + output + " --strip-components=1");
+                    exec_cmd("tar -xvf" + target_cache + source_name + " -C" + target_cache + "source/" + output + " --strip-components=1");
                 else
-                    exec_cmd("tar -xf" + target_cache + split(source, "/").back() + " -C" + target_cache + "source/" + output + " --strip-components=1");
+                    exec_cmd("tar -xf" + target_cache + source_name + " -C" + target_cache + "source/" + output + " --strip-components=1");
             }
         }
     }
