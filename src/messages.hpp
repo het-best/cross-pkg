@@ -52,10 +52,11 @@ enum msg_type
     MSG_PKG_ALR_DOWN = 302,
     MSG_PKG_DOWN_SRC = 303,
     MSG_PKG_GIT_COMMIT = 304,
-    MSG_PKG_DOWN_FAIL = 305,
-    MSG_PKG_EXTR_SRC = 306,
+    MSG_PKG_DOWN_MIRROR = 305,
+    MSG_PKG_DOWN_FAIL = 306,
+    MSG_PKG_EXTR_SRC = 307,
 
-    MSGV_PKG_CHECK_CACHE = 307,
+    MSGV_PKG_CHECK_CACHE = 308,
     MSGV_PKG_START_DOWN = 308,
 
     // 400 - 499 Install
@@ -169,6 +170,7 @@ const std::array down_msgs =
     PKG_PREFIX + "Source " + CYAN_COL + "{ARG2}" + WHITE_COL + " already downloaded, skipping...\n",
     PKG_PREFIX + "Downloading " + CYAN_COL + "{ARG2}" + WHITE_COL + "\n",
     PKG_PREFIX + "Git source: " + CYAN_COL + "{ARG2}" + WHITE_COL + " has more than 1 @, will be using the last one\n",
+    PKG_PREFIX + "Main url does not respond, trying mirror: \"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"\n",
     ERR_PREFIX + "Cannot download source \"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"\n",
     PREFIX + "Extracting sources\n",
 
