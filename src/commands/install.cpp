@@ -21,7 +21,6 @@
 #include <ranges>
 #include <string>
 #include <vector>
-#include <oneapi/tbb/detail/_range_common.h>
 
 #include "../cmd.hpp"
 #include "../messages.hpp"
