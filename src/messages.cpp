@@ -27,25 +27,25 @@ void print_msg(const msg_type msg, const std::string &arg1, const std::string &a
     // Getting message string
     std::string msg_str;
 
-    if (const uint type_i  = static_cast<uint>(msg); type_i < 100)
+    if (const uint type_i = static_cast<uint>(msg); type_i < 100 && type_i < gen_msgs.size())
         msg_str = gen_msgs[type_i];
-    else if (type_i < 200)
+    else if (type_i < 200 && type_i - 100 < build_msgs.size())
         msg_str = build_msgs[type_i - 100];
-    else if (type_i < 300)
+    else if (type_i < 300 && type_i - 200 < clear_msgs.size())
         msg_str = clear_msgs[type_i - 200];
-    else if (type_i < 400)
+    else if (type_i < 400 && type_i -300 < down_msgs.size())
         msg_str = down_msgs[type_i - 300];
-    else if (type_i < 500)
+    else if (type_i < 500 && type_i - 400 < install_msgs.size())
         msg_str = install_msgs[type_i - 400];
-    else if (type_i < 600)
+    else if (type_i < 600 && type_i - 500 < list_msgs.size())
         msg_str = list_msgs[type_i - 500];
-    else if (type_i < 700)
+    else if (type_i < 700 && type_i - 600 < remove_msgs.size())
         msg_str = remove_msgs[type_i - 600];
-    else if (type_i < 800)
+    else if (type_i < 800 && type_i - 700 < search_msgs.size())
         msg_str = search_msgs[type_i - 700];
-    else if (type_i < 900)
+    else if (type_i < 900 && type_i - 800 < update_msgs.size())
         msg_str = update_msgs[type_i - 800];
-    else if (type_i < 1000)
+    else if (type_i < 1000 && type_i - 900 < help_msgs.size())
         msg_str = help_msgs[type_i - 900];
 
     // Arguments

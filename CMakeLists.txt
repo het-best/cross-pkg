@@ -45,3 +45,8 @@ if (WITH_LIBCURL)
     target_link_libraries(cross-pkg PRIVATE CURL::libcurl)
     add_compile_definitions(WITH_LIBCURL)
 endif()
+
+option(DEV_MODE "Enable developer features for testing" OFF)
+if (DEV_MODE)
+    add_compile_definitions(DEV_MODE)
+endif()

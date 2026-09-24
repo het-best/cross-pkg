@@ -17,6 +17,7 @@ enum msg_type
     MSG_FLAG_ARG_INT = 4,
     MSG_NO_TARGET = 5,
     MSG_CONTINUE = 6,
+    MSG_DEV_MODE = 7,
 
     // 100 - 199 Build
     MSG_BUILD_ABORTING = 100,
@@ -100,41 +101,39 @@ enum msg_type
     MSG_PKGS_UPD = 804,
     MSG_PKGS_CAN_UPD = 805,
     MSG_PKGS_MAN_UPD = 806,
-    MSG_UPDATE_SUCC = 807,
-    MSG_UPDATE_FAIL = 808,
 
-    MSGV_PKG_FETCH = 809,
-    MSGV_CROSS_LICENSE = 810,
+    MSGV_PKG_FETCH = 807,
+    MSGV_CROSS_LICENSE = 808,
 
     // 900 - 999 Help
-    MSG_CROSS_CMDS = 900,
-    MSG_BUILD_INFO = 901,
-    MSG_CLEAR_INFO = 902,
-    MSG_DOWN_INFO = 903,
-    MSG_INSTALL_INFO = 904,
-    MSG_LIST_INFO = 905,
-    MSG_ORPHANS_INFO = 906,
-    MSG_REMOVE_INFO = 907,
-    MSG_SEARCH_INFO = 908,
-    MSG_UPDATE_INFO = 909,
-    MSG_VERSION_INFO = 910,
+    MSG_BUILD_INFO = 900,
+    MSG_CLEAR_INFO = 901,
+    MSG_DOWN_INFO = 902,
+    MSG_INSTALL_INFO = 903,
+    MSG_LIST_INFO = 904,
+    MSG_ORPHANS_INFO = 905,
+    MSG_REMOVE_INFO = 906,
+    MSG_SEARCH_INFO = 907,
+    MSG_UPDATE_INFO = 908,
+    MSG_VERSION_INFO = 909,
 };
 
 
 const std::array gen_msgs =
 {
     ERR_PREFIX + "No arguments were provided, see " + BLUE_COL + "help" + WHITE_COL + "\n",
-    ERR_PREFIX + "Unknown argument \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\"\n",
-    ERR_PREFIX + "Unknown flag \"" + MAG_COL + "{ARG1}" + WHITE_COL + "\"\n",
-    ERR_PREFIX + "No flag arguments were given to \"" + MAG_COL + "{ARG1}" + WHITE_COL + "\"\n",
-    ERR_PREFIX + "Flag arguments must be integer \"" + MAG_COL + "{ARG1}" + WHITE_COL + "\"\n",
+    ERR_PREFIX + "Unknown argument " + WHITE_COL + "\"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\"\n",
+    ERR_PREFIX + "Unknown flag " + WHITE_COL + "\"" + MAG_COL + "{ARG1}" + WHITE_COL + "\"\n",
+    ERR_PREFIX + "No flag arguments were given to " + WHITE_COL + "\"" + MAG_COL + "{ARG1}" + WHITE_COL + "\"\n",
+    ERR_PREFIX + "Flag argument must be integer " + WHITE_COL + "\"" + MAG_COL + "{ARG1}" + WHITE_COL + "\"\n",
     ERR_PREFIX + "No targets were provided\n",
-    PREFIX + CYAN_COL + "Continue?" + WHITE_COL + ": Press Enter to continue or Ctrl+C to abort\n",
+    PREFIX + CYAN_COL + "Continue?" + WHITE_COL + ": Press " + PINK_COL + "Enter" + WHITE_COL + " to continue or " + RED_COL + "Ctrl+C" + WHITE_COL + " to abort\n",
+    PREFIX + ORANGE_COL + "This function is for developers only" + WHITE_COL + "\n",
 };
 
 const std::array build_msgs =
 {
-    PREFIX + "Aborting building\n",
+    PREFIX + RED_COL + "Aborting building" + WHITE_COL + "\n",
     PREFIX + "Building explicit: " + BLUE_COL + "{ARG1}" + WHITE_COL + "\n",
     PREFIX + "Building implicit: " + BLUE_COL + "{ARG1}" + WHITE_COL + "\n",
     PREFIX + "Validating packages...\n",
@@ -161,22 +160,22 @@ const std::array build_msgs =
 
 const std::array clear_msgs =
 {
-    PREFIX + "No packages will be cleaned\n",
-    PREFIX + "Next packages cache will be cleaned: " + BLUE_COL + "{ARG1}" + WHITE_COL + "\n",
+    PREFIX + MAG_COL + "No packages will be cleaned" + WHITE_COL + "\n",
+    PREFIX + "Packages cache will be cleaned: " + BLUE_COL + "{ARG1}" + WHITE_COL + "\n",
     PREFIX + "Cache was successfully cleared\n",
 };
 
 const std::array down_msgs =
 {
-    PREFIX + "Aborting downloading\n",
+    PREFIX + RED_COL + "Aborting downloading" + WHITE_COL + "\n",
     PKG_PREFIX + "Reading sources\n",
     PKG_PREFIX + "Source " + CYAN_COL + "{ARG2}" + WHITE_COL + " already downloaded, skipping...\n",
     PKG_PREFIX + "Downloading " + CYAN_COL + "{ARG2}" + WHITE_COL + "\n",
     ERR_PREFIX + "Cannot initialize curl\n",
     ERR_PREFIX + "Cannot open file to output source into\n",
     PKG_PREFIX + "Git source: " + CYAN_COL + "{ARG2}" + WHITE_COL + " has more than 1 @, will be using the last one\n",
-    PKG_PREFIX + "Main url does not respond, trying mirror: \"" + CYAN_COL + "{ARG2}" + WHITE_COL + "\"\n",
-    ERR_PREFIX + "Cannot download source \"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"\n",
+    PKG_PREFIX + "Main url does not respond, trying mirror: " + CYAN_COL + "{ARG2}" + WHITE_COL + "\n",
+    ERR_PREFIX + "Cannot download source: " + CYAN_COL + "{ARG1}" + WHITE_COL + "\n",
     PREFIX + "Extracting sources\n",
 
     PKG_PREFIX + "Checking package cache\n",
@@ -185,7 +184,7 @@ const std::array down_msgs =
 
 const std::array install_msgs =
 {
-    ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" cache is not found/valid\n",
+    ERR_PREFIX + "Package " + WHITE_COL + "\"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " cache is not found/valid" + WHITE_COL + "\n",
     PKG_PREFIX + "Installing package ({ARG2})\n",
     PKG_PREFIX + "Nothing to install\n",
     PKG_PREFIX + "Creating manifest\n",
@@ -198,41 +197,39 @@ const std::array install_msgs =
 
 const std::array list_msgs =
 {
-    PREFIX + "No installed packages found! (" + MAG_COL + "How did you managed to do this" + WHITE_COL + "?)\n",
+    PREFIX + "No installed packages found! (" + MAG_COL + "How did you managed to do this?" + WHITE_COL + ")\n",
     PREFIX + "Total packages: " + GREEN_COL + "{ARG1}" + WHITE_COL + "\n",
 };
 
 const std::array remove_msgs =
 {
-    ERR_PREFIX + "Package \"{ARG1}\" not installed\n",
+    ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " not installed" + WHITE_COL + "\n",
     PREFIX + GREEN_COL + "{ARG1}" + WHITE_COL + " Checking if package removable\n",
-    ERR_PREFIX + "Package \"{ARG1}\" has dependents: " + MAG_COL + "{ARG2}" + WHITE_COL + "\n",
+    ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " has dependents: " + MAG_COL + "{ARG2}" + WHITE_COL + "\n",
     PREFIX + GREEN_COL + "{ARG1}" + WHITE_COL + " Removing package\n",
     PREFIX + GREEN_COL + "{ARG1}" + WHITE_COL + " Removed successfully\n",
-    ERR_PREFIX + "Package \"{ARG1}\" has not been removed, maybe try to delete it by hand\n",
+    ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " has not been removed, maybe try to delete it by hand" + WHITE_COL + "\n",
 };
 
 const std::array search_msgs =
 {
-    ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" wasn't found\n",
-    ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" configure file needs to have " + CYAN_COL  + ".crs" + WHITE_COL + " extension\n",
-    ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" configure file wasn't found\n",
-    ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" configure file doesnt have " + CYAN_COL + "-{ARG2}-" + WHITE_COL + " field\n",
-    ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" configure file source field doesnt have prefix\n",
-    ERR_PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" configure file source field has unknown prefix: \"" + CYAN_COL + "{ARG2}" + WHITE_COL + "\"\n",
+    ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " wasn't found" + WHITE_COL + "\n",
+    ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " configure file needs to have " + CYAN_COL  + ".crs" + RED_COL + " extension" + WHITE_COL + "\n",
+    ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " configure file wasn't found" + WHITE_COL + "\n",
+    ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " configure file doesnt have " + CYAN_COL + "-{ARG2}-" + RED_COL + " field" + WHITE_COL + "\n",
+    ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " configure file source field doesnt have prefix" + WHITE_COL + "\n",
+    ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " configure file source field has unknown prefix: " + WHITE_COL + "\"" + CYAN_COL + "{ARG2}" + WHITE_COL + "\"\n",
 };
 
 const std::array update_msgs =
 {
-    PREFIX + "cross-pkg v" + CROSS_VERSION + "\n",
+    PREFIX + ORANGE_COL + "cross-pkg " + PINK_COL + "v" + CROSS_VERSION + WHITE_COL + "\n",
     PREFIX + "Cross can be updated! " + ORANGE_COL + CROSS_VERSION + WHITE_COL + " -> " + GREEN_COL + "{ARG1}" + WHITE_COL + "\n",
     PREFIX + "Fetching packages for updates...\n",
     PREFIX + GREEN_COL + "No packages require update!" + WHITE_COL + "\n",
     PREFIX + GREEN_COL + "{ARG1}" + WHITE_COL + " packages can be updated, " + ORANGE_COL + "{ARG2}" + WHITE_COL + " needed to be checked manually \n",
-    "   Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" can be updated: " + ORANGE_COL + "{ARG2}" + WHITE_COL + " -> " + GREEN_COL + "{ARG3}" + WHITE_COL + "\n",
-    ORANGE_COL + "   Package \"" + BLUE_COL + "{ARG1}" + ORANGE_COL + "\" cannot be updated automatically, check it manually" + WHITE_COL + "\n",
-    PREFIX + "Packages were updated successfully\n",
-    PREFIX + "Update failed\n",
+    PREFIX + "Package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\" can be updated: " + ORANGE_COL + "{ARG2}" + WHITE_COL + " -> " + GREEN_COL + "{ARG3}" + WHITE_COL + "\n",
+    PREFIX + ORANGE_COL + "Package \"" + BLUE_COL + "{ARG1}" + ORANGE_COL + "\" cannot be updated automatically, check it manually" + WHITE_COL + "\n",
 
     PKG_PREFIX + "Fetching package...\n",
     ORANGE_COL + "\ncross-pkg  Copyright (C) 2026 Het Best\n" +
@@ -243,7 +240,6 @@ const std::array update_msgs =
 
 const std::array help_msgs =
 {
-    PREFIX + "cross-pkg v" + CROSS_VERSION + "\n\n",
     PREFIX + BLUE_COL + "build    " + WHITE_COL + "Builds and installed packages\n",
     PREFIX + BLUE_COL + "clear    " + WHITE_COL + "Clears cache\n",
     PREFIX + BLUE_COL + "download " + WHITE_COL + "Downloads package sources\n",

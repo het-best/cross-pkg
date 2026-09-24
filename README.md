@@ -31,6 +31,7 @@ And for installing
 |    Option     |  Description  |    Value    |
 | ------------- | ------------- |-------------|
 | WITH_LIBCURL  | Compile cross-pkg with libcurl instead of calling curl/wget command line utility (TURNING THIS OFF ALLOWS VULNERABILITIES TO BE EXPLOITED) | ON |
+| WITH_LIBCURL  | Enable developer features for testing | OFF |
 
 ## Using cross-pkg
 After you compiled and installed cross you can run `cross-pkg h` to get all commands and `cross-pkg h [cmd]`to get information about command arguments

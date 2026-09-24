@@ -27,7 +27,8 @@ void c_help(const std::string &target)
 {
     if (target.empty())
     {
-        print_msg(MSG_CROSS_CMDS);
+        print_msg(MSG_CROSS_VER);
+        std::cout << "\n";
 
         print_msg(MSG_BUILD_INFO);
         print_msg(MSG_CLEAR_INFO);
