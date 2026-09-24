@@ -20,7 +20,7 @@
 
 
 
-#define CROSS_VERSION "1.3"
+#define CROSS_VERSION "1.4"
 
 #define MAIN_PATH "/var/db/cross/"
 #define INSTALL_PATH "/var/db/cross/install/"
