@@ -1,13 +1,14 @@
 # Cross package manager
 Modern source based package manager for GNU/Linux written in C++ 20.
 
-Cross has been heavenly inspired by [kiss](https://github.com/kisslinux/kiss) package manager. It has similar commands, packages syntax to it but written in c++ and with additional features, such as:
+Cross has been heavenly inspired by [kiss](https://github.com/kisslinux/kiss) package manager. It has similar commands and package syntax to it but was written in c++ and with additional features, such as:
 
 - Advanced information about packages
 - Auto fetching new package versions (currently supports GitHub, gitlab, download.gnome.org, ketnel.org and ftp.gnu.org)
-- Safe installing (probability of you breaking something is extremely low)
-- Additional arguments to commands, you can enable verbose input, do not install dependencies etc
+- Safe installing (probability of you breaking something because of p.m. is extremely low)
+- Additional arguments to commands: you can enable verbose input, do not install dependencies etc.
 - Mirrors support
+- etc...
 
 ## Compiling
 Cross requires:
@@ -27,7 +28,7 @@ And for installing
 
 
 ## Using cross-pkg
-After you compiled and installed cross you can run `cross-pkg h` to get all commands and `cross-pkg h [cmd] `to get information about command arguments
+After you compiled and installed cross you can run `cross-pkg h` to get all commands and `cross-pkg h [cmd]`to get information about command arguments
 
 ## Making package
 Package is made from one <package name>.crs file with a couple of fields:
@@ -76,8 +77,8 @@ Example package script
 		    -D CMAKE_INSTALL_PREFIX=/usr \
 		    -D CMAKE_BUILD_TYPE=Release
         
-        	cmake --build build
-	        cmake --install build --prefix "$1"
+        cmake --build build
+	    cmake --install build --prefix "$1"
     -after-install-
         echo "This is after-install script!"
 
