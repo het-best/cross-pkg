@@ -178,6 +178,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
         const std::string& target_name = target_infos[i].name;
         const std::string& target_path = target_paths[i];
 
+
         // Checking if target is implicit
         if (std::ranges::find(targets, target_name) != targets.end())
             continue;
@@ -217,7 +218,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
         const pkg_info& info = target_infos[i];
 
         // Checking version
-        std::optional<pkg_info> inst_info = get_pkg_info(install_path + INSTALL_PATH + info.name + ".crs", false);
+        std::optional<pkg_info> inst_info = get_pkg_info(install_path + INSTALL_PATH + info.name + "/config.crs", false);
 
         if (!inst_info.has_value())
         {
@@ -289,19 +290,11 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
     for (uint i = 0; i < target_infos.size(); i++)
     {
         const std::string& target_name = target_infos[i].name;
-        const std::string& target_version = target_infos[i].version;
         const std::string& target_cache = CACHE_PATH + target_name + "/";
 
 
         // Checking if package has been installed
         const std::optional<pkg_info> inst_info = get_pkg_info(INSTALL_PATH + target_name + "/config.crs", false);
-
-        if (inst_info.has_value() && cross_stov(inst_info->version) == cross_stov(target_version) && std::filesystem::exists(target_cache + "install"))
-        {
-
-        }
-
-
         std::chrono::time_point build_start = std::chrono::system_clock::now();
 
 
@@ -338,7 +331,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
 
         if (!build_result)
         {
-            print_msg(MSG_PKG_BUILD_FAIL);
+            print_msg(MSG_PKG_BUILD_FAIL, target_name);
             return false;
         }
 
@@ -426,6 +419,12 @@ std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_ta
     std::vector<pkg_info> depends_info;
     std::vector<std::string> depends_paths;
 
+    if (prev_depends.contains(target))
+        return std::make_pair(depends_info, depends_paths);
+
+    prev_depends.insert(target);
+
+
     // Getting target path and depends
     const std::string target_path = get_target_path(target);
     if (target_path.empty())
@@ -449,15 +448,8 @@ std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_ta
             return std::nullopt;
 
         const std::optional<pkg_info> depend_inst_info = get_pkg_info(INSTALL_PATH + depend + "/config.crs", false);
-
         if (depend_inst_info.has_value() && cross_stov(depend_inst_info->version) >= cross_stov(depend_info->version))
             continue;
-
-
-        // Adding dependency to the list
-        prev_depends.insert(depend);
-        depends_info.push_back(depend_info.value());
-        depends_paths.push_back(depend_path);
 
 
         // Recursion
@@ -465,16 +457,12 @@ std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_ta
         if (!depends_depends.has_value())
             return std::nullopt;
 
-        depends_info.insert( depends_info.begin(), depends_depends.value().first.begin(), depends_depends.value().first.end() );
-        depends_paths.insert( depends_paths.begin(), depends_depends.value().second.begin(), depends_depends.value().second.end() );
+        depends_info.insert(depends_info.end(), depends_depends.value().first.begin(), depends_depends.value().first.end());
+        depends_paths.insert(depends_paths.end(), depends_depends.value().second.begin(), depends_depends.value().second.end());
     }
 
-    if (!prev_depends.contains(target))
-    {
-        prev_depends.insert(target);
-        depends_info.push_back(info.value());
-        depends_paths.push_back(target_path);
-    }
+    depends_info.push_back(info.value());
+    depends_paths.push_back(target_path);
 
 
     return std::make_pair(depends_info, depends_paths);

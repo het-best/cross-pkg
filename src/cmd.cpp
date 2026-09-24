@@ -24,6 +24,8 @@
 bool exec_cmd(const std::string &command)
 {
     FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe)
+        throw std::runtime_error("popen() failed");
     std::array<char, 256> buffer{};
 
 
@@ -40,6 +42,8 @@ bool exec_cmd(const std::string &command)
 std::string exec_cmd_echo(const std::string &command)
 {
     FILE* pipe = popen(command.c_str(), "r");
+    if (!pipe)
+        throw std::runtime_error("popen() failed");
     std::array<char, 256> buffer{};
 
 
