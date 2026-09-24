@@ -44,11 +44,8 @@ struct curl_prog_str
 int curl_progress(void *p, curl_off_t down_total, curl_off_t down_now, curl_off_t up_total, curl_off_t up_now)
 {
     // Make so if server did not respond yet it will be 0%
-    if (down_total <= 0)
-    {
-        down_total = UINT_MAX;
-        down_now = 0;
-    }
+    if ((down_now == 0 && down_total <= 0) || (down_total > 0 && down_total == down_now && down_total < 0))
+        return 0; 
 
     
     // Setup
@@ -97,9 +94,9 @@ int curl_progress(void *p, curl_off_t down_total, curl_off_t down_now, curl_off_
     bar << '\r' << WHITE_COL << '[' << GREEN_COL;
 
     for (int i = 0; i < progress_width; i++)
-        bar << (i == filled  ?  (">" + WHITE_COL) : (i < filled ? "=" : "-"));
+        bar << (i == filled ? (">" + WHITE_COL) : (i < filled ? "=" : "-"));
 
-    bar << "] " << std::setw(3) << static_cast<int>(fraction * 100) << "% " << CYAN_COL << speed_str << ORANGE_COL << est_time_str << "\033[K";
+    bar << WHITE_COL << "] " << std::setw(3) << (fraction == 1 ? GREEN_COL : "") << static_cast<int>(fraction * 100) << "% " << CYAN_COL << speed_str << ORANGE_COL << est_time_str << "\033[K";
 
 
     // Flushing
@@ -132,10 +129,11 @@ bool url_download(const std::string& url, const std::string& path, const std::st
     // Downloading params
     curl_prog_str progress(0, curl); 
 
-    struct curl_slist *headers = NULL;
+    curl_slist* headers = NULL;
     headers = curl_slist_append(headers, "Accept: */*");
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
 
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "curl/8.0.1");
     curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, curl_write_call);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, file);
@@ -149,18 +147,18 @@ bool url_download(const std::string& url, const std::string& path, const std::st
 
     // Downloading
     const CURLcode result = curl_easy_perform(curl);
+    std::cerr << "\n";
     
-    if(result != CURLE_OK)
+    if (result != CURLE_OK)
     {
-        std::cout << curl_easy_strerror(result) << "\n";
+        print_msg(MSG_PKG_CURL_DOWN_FAIL, curl_easy_strerror(result));
 
-            long response_code;
+        long response_code;
         curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &response_code);
-        std::cout << response_code << "\n";
+        print_msg(MSG_PKG_HTTPS_DOWN_FAIL, std::to_string(response_code));
 
     }
 
-    std::cerr << "\n";
     fclose(file);
     curl_easy_cleanup(curl);
 

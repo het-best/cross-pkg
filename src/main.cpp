@@ -54,11 +54,11 @@ int main(const int argc, char* argv[])
     {
         if (SU_CMD.empty())
         {
-            if (exec_cmd("doas --help 2>/dev/null 2>&1"))
+            if (exec_cmd("doas -V >/dev/null 2>&1"))
                 SU_CMD = "doas";
-            else if (exec_cmd("sudo --help 2>/dev/null 2>&1"))
+            else if (exec_cmd("sudo --help >/dev/null 2>&1"))
                 SU_CMD = "sudo";
-            else if (exec_cmd("eun0 --help 2>/dev/null 2>&1"))
+            else if (exec_cmd("eun0 --help >/dev/null 2>&1"))
                 SU_CMD = "run0";
         }
     }
