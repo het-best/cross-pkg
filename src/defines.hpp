@@ -30,5 +30,5 @@
 #define CFLAGS "-D_FORTIFY_SOURCE=2 -fstack-protector-strong -O2 -pipe -march=native"
 #define BUILD_ARGS "CFLAGS=\"" CFLAGS "\" CXXFLAGS=\"$CFLAGS\" MAKEFLAGS=\"-j" + std::to_string(std::thread::hardware_concurrency()) + "\""
 
-inline std::string SU_CMD = "";
-inline std::string DOWN_CMD = "";
+inline std::string SU_CMD;
+inline std::string DOWN_CMD;

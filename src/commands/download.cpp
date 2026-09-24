@@ -209,6 +209,9 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                     continue;
                 }
 
+                if (!std::filesystem::exists(target_cache + "source/" + output))
+                    exec_cmd("mkdir " + target_cache + "source/" + output);
+
                 if (verbose)
                     exec_cmd("tar -xvf" + target_cache + source_name + " -C" + target_cache + "source/" + output + " --strip-components=1");
                 else
