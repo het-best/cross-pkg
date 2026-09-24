@@ -47,6 +47,7 @@ struct pkg_info
     std::string version;
     std::vector<std::tuple<source_type, std::string, std::string>> sources;
     std::vector<std::string> depends;
+    std::vector<std::string> rebuild_depends;
     std::string bef_build;
     std::string build;
     std::string aft_install;

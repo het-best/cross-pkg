@@ -462,5 +462,38 @@ std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_ta
     depends_paths.push_back(target_path);
 
 
+    // Rebuild dependencies
+    for (const std::string& rebuild_depend : info.value().rebuild_depends)
+    {
+        if (prev_depends.contains(rebuild_depend))
+            continue;
+
+        
+        // Skip if it is not installed
+        const std::optional<pkg_info> rebuild_inst_info = get_pkg_info(INSTALL_PATH + rebuild_depend + "/config.crs", false);
+        if (!rebuild_inst_info.has_value())
+            continue;
+
+
+        // Getting package info
+        const std::string rebuild_path = get_target_path(rebuild_depend);
+        if (rebuild_path.empty())
+            return std::nullopt;
+
+        const std::optional<pkg_info> rebuild_info = get_pkg_info(rebuild_path);
+        if (!rebuild_info.has_value())
+            return std::nullopt;
+
+
+        // Inserting package to queue
+        const std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> rebuild_depends_depends = get_target_depends(rebuild_depend, prev_depends);
+        if (!rebuild_depends_depends.has_value())
+            return std::nullopt;
+
+        depends_info.insert(depends_info.end(), rebuild_depends_depends.value().first.begin(), rebuild_depends_depends.value().first.end());
+        depends_paths.insert(depends_paths.end(), rebuild_depends_depends.value().second.begin(), rebuild_depends_depends.value().second.end());
+    }
+
+
     return std::make_pair(depends_info, depends_paths);
 }
