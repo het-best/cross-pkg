@@ -138,7 +138,7 @@ const std::array build_msgs =
     PREFIX + "Validating packages...\n",
     PREFIX + "Building new package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\"" + GREEN_COL + " v{ARG2}" + WHITE_COL + "\n",
     PREFIX + "Updating already installed package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\": "
-        + ORANGE_COL + "{ARG2}" + WHITE_COL + " -> " + GREEN_COL + "{ARG3}" + WHITE_COL + "\n",
+        + ORANGE_COL + "{ARG3}" + WHITE_COL + " -> " + GREEN_COL + "{ARG2}" + WHITE_COL + "\n",
     PREFIX + "Rebuilding package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\"\n",
     PREFIX + "Downgrading already installed package \"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\": "
         + GREEN_COL + "{ARG2}" + WHITE_COL + " -> " + ORANGE_COL + "{ARG3}" + WHITE_COL + "\n",
@@ -171,7 +171,7 @@ const std::array down_msgs =
     PKG_PREFIX + "Source " + CYAN_COL + "{ARG2}" + WHITE_COL + " already downloaded, skipping...\n",
     PKG_PREFIX + "Downloading " + CYAN_COL + "{ARG2}" + WHITE_COL + "\n",
     PKG_PREFIX + "Git source: " + CYAN_COL + "{ARG2}" + WHITE_COL + " has more than 1 @, will be using the last one\n",
-    PKG_PREFIX + "Main url does not respond, trying mirror: \"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"\n",
+    PKG_PREFIX + "Main url does not respond, trying mirror: \"" + CYAN_COL + "{ARG2}" + WHITE_COL + "\"\n",
     ERR_PREFIX + "Cannot download source \"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"\n",
     PREFIX + "Extracting sources\n",
 

@@ -162,6 +162,14 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
             }
             else if (prefix == SRC_GIT)
             {
+                // Checking
+                if (std::filesystem::exists(target_cache + "git-source") && !force_download)
+                {
+                    print_msg(MSG_PKG_ALR_DOWN, target_name, source);
+                    continue;
+                }
+
+
                 print_msg(MSG_PKG_DOWN_SRC, target_name, source);
 
                 if (source.find("@") != std::string::npos)
@@ -172,17 +180,17 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                         print_msg(MSG_PKG_GIT_COMMIT, target_name, source);
 
 
-                    if (!exec_cmd("git clone " + splitted_source.front() + " " + target_cache + "source/" + output))
+                    if (!exec_cmd("git clone --recurse-submodules " + splitted_source.front() + " " + target_cache + "git-source/" + output))
                     {
                         print_msg(MSG_PKG_DOWN_FAIL, splitted_source.front());
                         return false;
                     }
 
-                    exec_cmd("(cd " + target_cache + "source/ " + output + " && git checkout " + splitted_source.back() + " " + target_cache + "source/" + output + ")");
+                    exec_cmd("(cd " + target_cache + "git-source/ " + output + " && git checkout " + splitted_source.back() + " " + target_cache + "git-source/" + output + ")");
                 }
                 else
                 {
-                    if (!exec_cmd("git clone " + source + " " + target_cache + "source"))
+                    if (!exec_cmd("git clone --recurse-submodules " + source + " " + target_cache + "git-source"))
                     {
                         print_msg(MSG_PKG_DOWN_FAIL, source);
                         return false;
@@ -217,6 +225,8 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                 else
                     exec_cmd("tar -xf" + target_cache + source_name + " -C" + target_cache + "source/" + output + " --strip-components=1");
             }
+            else if (prefix == SRC_GIT)
+                exec_cmd("cp -a " + target_cache + "git-source/. " + target_cache + "source");
         }
     }
 

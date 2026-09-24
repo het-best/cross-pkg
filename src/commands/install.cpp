@@ -165,7 +165,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
         exec_cmd(SU_CMD + " cp " + target_cache + target_name + ".crs " + target_ins_path + "config.crs ");
         exec_cmd(SU_CMD + " cp " + target_cache  + "manifest " + target_ins_path);
 
-        exec_cmd(SU_CMD + " sudo chmod -R 744 " + target_ins_path)
+        exec_cmd(SU_CMD + " sudo chmod -R 755 " + target_ins_path);
 
 
         // Checking for already existing config files in /etc
