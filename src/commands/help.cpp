@@ -42,28 +42,31 @@ void c_help(const std::string &target)
     else if (target == "build")
     {
         print_msg(MSG_BUILD_INFO);
-        std::cout << CYAN_COL << " -A     " << WHITE_COL << "Show targets paths instead of names\n";
-        std::cout << CYAN_COL << " -Y     " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
-        std::cout << CYAN_COL << " -D     " << WHITE_COL << "Disabled checking dependencies\n";
+
+        std::cout << CYAN_COL << " -C     " << WHITE_COL << "Disabled checking dependencies\n";
+        std::cout << CYAN_COL << " -D     " << WHITE_COL << "Do not download sources\n";
+        std::cout << CYAN_COL << " -F     " << WHITE_COL << "Force redownloading sources even if they are already present\n";
         std::cout << CYAN_COL << " -I ... " << WHITE_COL << "Do not install packages or if argument is given install them to this path\n";
-        std::cout << CYAN_COL << " -R     " << WHITE_COL << "Force redownloading sources even if they are already present\n";
-        std::cout << CYAN_COL << " -P     " << WHITE_COL << "Do not remove already unpacked/compiled source\n";
-        std::cout << CYAN_COL << " -S     " << WHITE_COL << "Do not download sources\n";
+        std::cout << CYAN_COL << " -P     " << WHITE_COL << "Show targets paths instead of names\n";
+        std::cout << CYAN_COL << " -R     " << WHITE_COL << "Remove standard build params\n";
+        std::cout << CYAN_COL << " -S     " << WHITE_COL << "Disable striping install binaries\n";
+        std::cout << CYAN_COL << " -U     " << WHITE_COL << "Do not remove already unpacked/compiled source\n";
         std::cout << CYAN_COL << " -V     " << WHITE_COL << "Enables verbose output\n";
+        std::cout << CYAN_COL << " -Y     " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
     }
     else if (target == "clear")
     {
         print_msg(MSG_CLEAR_INFO);
-        std::cout << CYAN_COL << " -Y     " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
         std::cout << CYAN_COL << " -E ... " << WHITE_COL << "Exclude packages from clearing\n";
         std::cout << CYAN_COL << " -I ... " << WHITE_COL << "Include packages to clearing\n";
         std::cout << CYAN_COL << " -V     " << WHITE_COL << "Enables verbose output\n";
+        std::cout << CYAN_COL << " -Y     " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
     }
     else if (target == "download")
     {
         print_msg(MSG_DOWN_INFO);
         std::cout << CYAN_COL << " -R " << WHITE_COL << "Force redownloading sources even if they are already present\n";
-        std::cout << CYAN_COL << " -P " << WHITE_COL << "Do not remove already unpacked/compiled source\n";
+        std::cout << CYAN_COL << " -U " << WHITE_COL << "Do not remove already unpacked/compiled source\n";
         std::cout << CYAN_COL << " -V " << WHITE_COL << "Enables verbose output\n";
     }
     else if (target == "install")

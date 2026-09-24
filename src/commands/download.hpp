@@ -16,8 +16,8 @@
 /* download - Downloads package sources
  *
  * Flags:
- * -R Force redownloading sources even if they are already present
- * -P Do not remove already unpacked/compiled source
+ * -F Force redownloading sources even if they are already present
+ * -U Do not remove already unpacked/compiled source
  * -V Enables verbose output
  */
 
