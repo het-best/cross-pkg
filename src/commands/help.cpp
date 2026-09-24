@@ -65,7 +65,7 @@ void c_help(const std::string &target)
     else if (target == "download")
     {
         print_msg(MSG_DOWN_INFO);
-        std::cout << CYAN_COL << " -R " << WHITE_COL << "Force redownloading sources even if they are already present\n";
+        std::cout << CYAN_COL << " -F " << WHITE_COL << "Force redownloading sources even if they are already present\n";
         std::cout << CYAN_COL << " -U " << WHITE_COL << "Do not remove already unpacked/compiled source\n";
         std::cout << CYAN_COL << " -V " << WHITE_COL << "Enables verbose output\n";
     }

@@ -16,6 +16,7 @@
 #include "download.hpp"
 
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 
 #include "search.hpp"
@@ -127,11 +128,37 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                 else if (DOWN_CMD == "wget")
                     download_result = exec_cmd("wget " + source + " -P " + target_cache);
 
-                if (!download_result)
+                if (download_result)
+                    continue;
+
+
+                // Checking mirrors
+                const std::vector<std::string> splitted_source = split(source, "/");
+                const std::string domain = splitted_source[2];
+                const std::string no_domain_url(source.begin() + (splitted_source[0] + "//" + splitted_source[2]).length(), source.end());
+
+                if (std::filesystem::exists(MIRRORS_PATH) && std::filesystem::exists(MIRRORS_PATH + domain))
                 {
-                    print_msg(MSG_PKG_DOWN_FAIL, source);
-                    return false;
+                    std::ifstream file(MIRRORS_PATH + domain);
+                    std::string line;
+
+                    while (getline(file, line))
+                    {
+                        const std::string url = splitted_source[0] + "//" + line + no_domain_url;
+                        print_msg(MSG_PKG_DOWN_MIRROR, target_name, url);
+
+                        if (DOWN_CMD == "curl")
+                            download_result = exec_cmd("curl -L " + url + " -o " + target_cache + source_name);
+                        else if (DOWN_CMD == "wget")
+                            download_result = exec_cmd("wget " + url + " -P " + target_cache);
+
+                        if (download_result)
+                            goto extract;
+                    }
                 }
+
+                print_msg(MSG_PKG_DOWN_FAIL, source);
+                return false;
             }
             else if (prefix == SRC_GIT)
             {
@@ -163,6 +190,7 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
                 }
             }
         }
+        extract:
 
 
         // Extracting sources
