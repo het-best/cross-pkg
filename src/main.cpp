@@ -91,7 +91,8 @@ int main(const int argc, char* argv[])
     if (!std::filesystem::exists(CACHE_PATH))
     {
         exec_cmd(SU_CMD + " mkdir " + static_cast<std::string>(CACHE_PATH));
-        exec_cmd(SU_CMD + " chmod -R 777 " + static_cast<std::string>(CACHE_PATH));
+        exec_cmd(SU_CMD + " chown root:wheel " + static_cast<std::string>(CACHE_PATH));
+        exec_cmd(SU_CMD + " chmod -R 750 " + static_cast<std::string>(CACHE_PATH));
     }
 
 
