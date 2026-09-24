@@ -348,10 +348,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
             if (verbose)
                 print_msg(MSGV_BUILD_STRIP);
 
-            for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
-            {
-                exec_cmd("strip --strip-unneeded " + entry.string() + " 2>/dev/null");
-            }
+            exec_cmd("find " + target_cache + "install | xargs strip --strip-unneeded 2>/dev/null");
         }
 
 
