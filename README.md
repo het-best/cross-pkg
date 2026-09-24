@@ -4,7 +4,7 @@ Modern source based package manager for GNU/Linux written in C++ 20.
 Cross has been heavenly inspired by [kiss](https://github.com/kisslinux/kiss) package manager. It has similar commands, packages syntax to it but written in c++ and with additional features, such as:
 
 - Advanced information about packages
-- Auto fetching new package versions (currently supports only GitHub and ftp.gnu.org)
+- Auto fetching new package versions (currently supports GitHub, gitlab, download.gnome.org, ketnel.org and ftp.gnu.org)
 - Safe installing (probability of you breaking something is extremely low)
 - Additional arguments to commands, you can enable verbose input, do not install dependencies etc
 - Mirrors support

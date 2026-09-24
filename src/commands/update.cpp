@@ -71,7 +71,7 @@ void c_update(const std::vector<std::pair<char, std::string>> &flags)
     for (const std::filesystem::path path : std::filesystem::directory_iterator(INSTALL_PATH))
     {
         std::optional<pkg_info> pkg_info = get_pkg_info(path / "config.crs");
-        if (!pkg_info.has_value() || (pkg_info.has_value() && pkg_info->sources.empty()))
+        if (!pkg_info.has_value() || (pkg_info.has_value() && pkg_info->sources.empty()) || std::get<0>(pkg_info->sources.front()) != SRC_URL)
             continue;
 
 
@@ -198,6 +198,7 @@ void c_update(const std::vector<std::pair<char, std::string>> &flags)
         exec_cmd("rm " + target_path);
         std::ofstream file(config_str);
         file << config_str;
+        file.close();
 
 
         build_targets.push_back(name);
@@ -222,7 +223,7 @@ std::pair<std::string, std::string> get_version(const std::string &url, std::str
 {
     if (url.find("github.com") != std::string::npos)
     {
-        // Getting only https://github.com/XXX/XXX
+        // Getting only github.com/XXX/XXX
         const std::vector<std::string> splitted_url = split(url, "/");
         std::string base_url;
 
@@ -235,6 +236,7 @@ std::pair<std::string, std::string> get_version(const std::string &url, std::str
         // Getting last version
         sleep(sleep_time);
         std::string version = exec_cmd_echo("curl -sI \"" + base_url + "/releases/latest\" | grep -i '^location:' | awk -F'/' '{print $NF}' | tr -d '\\r'");
+
 
         // This command can fetch releases AND tags but in my experience it works worse than curl one
         if (version == "releases\n")
@@ -252,7 +254,7 @@ std::pair<std::string, std::string> get_version(const std::string &url, std::str
         std::string download_url;
         const std::string possible_url = base_url + "releases/download/" + ((has_v ? "v" : "") + version) + "/" + splitted_url[4] + "-" + version + ".tar.xz";
 
-        if (exec_cmd("curl -sIL -o /dev/null -w \"%{http_code}\n\" " + possible_url + " | grep -q \"^200$\""))
+        if (system(std::string("curl -sIL -o /dev/null -w \"%{http_code}\n\" " + possible_url + " | grep -q \"^200$\"").c_str()))
             download_url = possible_url;
         else
             download_url = base_url + "archive/refs/tags/" + (has_v ? "v" : "") + version + ".tar.gz";
@@ -262,9 +264,37 @@ std::pair<std::string, std::string> get_version(const std::string &url, std::str
         if (cross_stov(version) > cross_stov(current_version))
             return std::make_pair(download_url, version);
     }
-    else if (url.find("https://ftp.gnu.org/gnu/") != std::string::npos)
+    else if (url.find("ftp.gnu.org") != std::string::npos || url.find("kernel.org") != std::string::npos)
     {
         std::vector<std::string> splitted_url = split(url, "/");
+        const std::string package_name = splitted_url[splitted_url.size() - 2];
+        std::string base_url;
+
+        for (uint i = 0; i < splitted_url.size() - 1; i++)
+        {
+            base_url += splitted_url[i] + "/";
+        }
+
+
+        // Getting version
+        std::string version = exec_cmd_echo("curl -s " + base_url + " | grep -oE '" + package_name +
+            "-[0-9]+\\.[0-9]+(\\.[0-9]+)*' | sort -V | tail -n 1 | sed 's/" + package_name + "-//'");
+
+        if (version.empty())
+            version = exec_cmd_echo("curl -s " + base_url + " | grep -oE '" + std::string(package_name.begin(), package_name.end() - 1) +
+                "-[0-9]+\\.[0-9]*' | sort -V | tail -n 1 | sed 's/" + package_name + "-//'");
+
+        if (version.empty())
+            return {};
+
+        version.erase(version.length() - 1);
+        if (cross_stov(version) < cross_stov(current_version))
+            return std::make_pair(base_url + package_name + "-" + version + ".tar.gz", version);
+    }
+    else if (url.find("download.gnome.org") != std::string::npos)
+    {
+        std::vector<std::string> splitted_url = split(url, "/");
+        const std::string package_name= splitted_url[4];
         std::string base_url;
 
         for (uint i = 0; i < 5; i++)
@@ -273,32 +303,45 @@ std::pair<std::string, std::string> get_version(const std::string &url, std::str
         }
 
 
-        // Getting package name
-        std::string package_name;
-        std::vector<std::string> pkg_name_poss = split(splitted_url[5], "-");
-
-        for (uint i = 0; i < pkg_name_poss.size(); i++)
-        {
-            if (pkg_name_poss[i].find_first_of("0123456789") == 0)
-            {
-                for (uint v = 0; v < i; v++)
-                {
-                    package_name += pkg_name_poss[v] + "-";
-                }
-                package_name.erase(package_name.length() - 1);
-            }
-        }
-
         // Getting version
-        std::string version = exec_cmd_echo("curl -s " + base_url + " | grep -oE '" + package_name + "-[0-9]+\\.[0-9]+(\\.[0-9]+)*' | "
-                                                                                                     "sort -V | tail -n 1 | sed 's/" + package_name + "-//'");
+        std::string version = exec_cmd_echo("v=$(curl -s \"" + base_url + "\" | grep -oP '(?<=href=\")[0-9]+(\\.[0-9]+)+/(?=\")' | sort -V | tail -1); curl -s \"" +
+            base_url + "$v\" | grep -oP '(?<=href=\")'\"" + package_name + "\"'-[0-9.]+\\.tar\\.[a-z.]+(?=\")' | sort -V | tail -1");
 
         if (version.empty())
             return {};
 
+        // Returning version
         version.erase(version.length() - 1);
+        std::string shortened_version(version.begin() + version.find_last_of('-') + 1, version.end() - 7);
+        shortened_version = std::string(shortened_version.begin(), shortened_version.begin() + shortened_version.find_last_of('.'));
+
+        std::string download_url = base_url + shortened_version + "/" + version;
+
         if (cross_stov(version) < cross_stov(current_version))
-            return std::make_pair(base_url + package_name + "-" + version + ".tar.gz", version);
+            return std::make_pair(download_url, version);
+    }
+    else if (url.find("gitlab.") != std::string::npos || url.find(".freedesktop.org") != std::string::npos)
+    {
+        std::string base_url(url.begin(), url.end() - url.find("/-/") - 4);
+
+
+        // Getting last version
+        sleep(sleep_time);
+        std::string version = exec_cmd_echo("curl -s \"$(cut -d/ -f1-3<<<" + base_url + ")/api/v4/projects/$(cut -d/ -f4-<<<" + base_url +
+            "|sed 's:/$::;s/\\.git$//;s:/:%2F:g')/repository/tags\" | grep -oP '(?<=\"name\":\")[^\"]+' | head -1");
+
+        if (version.empty())
+            return {};
+
+
+        // Returning version
+        version.erase(version.length() - 1);
+        const std::string repo_name = split(base_url, "/").back();
+
+        std::string download_url = base_url + "/-/archive/" + version + "/" + repo_name + "-" + version + ".tar.gz";
+
+        if (cross_stov(version) > cross_stov(current_version))
+            return std::make_pair(download_url, version);
     }
     else
     {
