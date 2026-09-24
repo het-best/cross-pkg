@@ -34,6 +34,10 @@
 #include "commands/remove.hpp"
 #include "commands/update.hpp"
 
+#ifdef WITH_LIBCURL
+#include <curl/curl.h>
+#endif
+ 
 
 int main(const int argc, char* argv[])
 {
@@ -137,6 +141,13 @@ int main(const int argc, char* argv[])
     }
 
 
+
+    bool result = 0;
+#ifdef WITH_LIBCURL
+    curl_global_init(CURL_GLOBAL_DEFAULT);
+#endif
+    
+
     // Checking which argument was provided
     if (command == "help" || command == "h")
     {
@@ -150,16 +161,16 @@ int main(const int argc, char* argv[])
         if (args.empty())
         {
             print_msg(MSG_NO_TARGET);
-            return 1;
+            result = 1;
         }
 
         if (!c_build(args, flags))
         {
             print_msg(MSG_BUILD_ABORTING);
-            return 1;
+            result = 1;
         }
-
-        print_msg(MSG_BUILD_SUC);
+        else
+            print_msg(MSG_BUILD_SUC);
     }
     else if (command == "clear" || command == "c")
         c_clear(flags);
@@ -168,13 +179,13 @@ int main(const int argc, char* argv[])
         if (args.empty())
         {
             print_msg(MSG_NO_TARGET);
-            return 1;
+            result = 1;
         }
 
         if (!c_download(args, flags))
         {
             print_msg(MSG_DOWN_ABORTING);
-            return 1;
+            result = 1;
         }
     }
     else if (command == "install" || command == "i")
@@ -182,10 +193,10 @@ int main(const int argc, char* argv[])
         if (args.empty())
         {
             print_msg(MSG_NO_TARGET);
-            return 1;
+            result = 1;
         }
-
-        c_install(args, flags);
+        else
+            c_install(args, flags);
     }
     else if (command == "list" || command == "l")
         c_list();
@@ -196,20 +207,20 @@ int main(const int argc, char* argv[])
         if (args.empty())
         {
             print_msg(MSG_NO_TARGET);
-            return 1;
+            result = 1;
         }
-
-        c_remove(args, flags);
+        else
+            c_remove(args, flags);
     }
     else if (command == "search" || command == "s")
     {
         if (args.empty())
         {
             print_msg(MSG_NO_TARGET);
-            return 1;
+            result = 1;
         }
-
-        c_search(args[0], flags);
+        else
+            c_search(args[0], flags);
     }
     else if (command == "update" || command == "u")
         c_update(flags);
@@ -219,5 +230,10 @@ int main(const int argc, char* argv[])
         print_msg(MSG_UNK_CMD, command);
 
 
-    return 0;
+
+#ifdef WITH_LIBCURL
+    curl_global_cleanup();
+#endif
+
+    return result;
 }
