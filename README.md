@@ -28,10 +28,10 @@ And for installing
 	sudo cmake --install build
 
 ### Compile arguments
-|    Option     |  Description  |    Value    |
+|	Option	 |  Description  |	Value	|
 | ------------- | ------------- |-------------|
 | WITH_LIBCURL  | Compile cross-pkg with libcurl instead of calling curl/wget command line utility (TURNING THIS OFF ALLOWS VULNERABILITIES TO BE EXPLOITED) | ON |
-|    DEV_MODE   | Enable developer features for testing | OFF |
+|	DEV_MODE   | Enable developer features for testing | OFF |
 
 ## Using cross-pkg
 After you compiled and installed cross you can run `cross-pkg h` to get all commands and `cross-pkg h [cmd]`to get information about command arguments
@@ -70,28 +70,28 @@ Also git+ prefix can have @ symbol with commit has after it to checkout to requi
 
 Example package script
 
-    -desc-
-        Modern source based package manager for GNU/Linux written in C++ 20.
-    -version-
-        1.0
-    -sources-
-        url+https://github.com/het-best/cross-pkg
-    -depends-
-        cmake
-        gcc
-    -rebuild-depends-
-        wayland
-    -before-build-
-        echo "This is before-build script!"
-    -build-
-	    cmake -S . -B build \
-		    -D CMAKE_INSTALL_PREFIX=/usr \
-		    -D CMAKE_BUILD_TYPE=Release
-        
-        cmake --build build
-	    cmake --install build --prefix "$1"
-    -after-install-
-        echo "This is after-install script!"
+	-desc-
+		Modern source based package manager for GNU/Linux written in C++ 20.
+	-version-
+		1.0
+	-sources-
+		url+https://github.com/het-best/cross-pkg
+	-depends-
+		cmake
+		gcc
+	-rebuild-depends-
+		wayland
+	-before-build-
+		echo "This is before-build script!"
+	-build-
+		cmake -S . -B build \
+			-D CMAKE_INSTALL_PREFIX=/usr \
+			-D CMAKE_BUILD_TYPE=Release
+		
+		cmake --build build
+		cmake --install build --prefix "$1"
+	-after-install-
+		echo "This is after-install script!"
 
 ## Configuring mirrors
 To add mirror to some source you need to create file with your host name, 
@@ -100,6 +100,6 @@ You need to specify mirrors one per line, just with domain, for example:
 
 `/var/db/cross/mirrors/ftp.gnu.org`:
 
-    sunsite.icm.edu.pl
-    ftp-stud.fht-esslingen.de
-    mirrors.kernel.org
+	sunsite.icm.edu.pl
+	ftp-stud.fht-esslingen.de
+	mirrors.kernel.org
