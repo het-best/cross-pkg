@@ -79,6 +79,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 	{
 		const std::string& target_name = targets[i];
 		const std::string& target_cache = std::string(CACHE_PATH) + target_name + "/";
+		const std::string& target_ins_path = install_path + INSTALL_PATH + target_name + "/";
 
 
 		// Checking cache
@@ -109,26 +110,35 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 			print_msg(MSGV_PKG_REM_FILES, target_name);
 
 		std::ifstream man_file(target_cache + "manifest");
-		if (man_file.is_open())
+		std::ifstream inst_man_file(target_ins_path + "manifest");
+		
+		std::stringstream buffer;
+		buffer << man_file.rdbuf();
+		
+		if (man_file.is_open() && inst_man_file.is_open())
 		{
 			std::string line;
 
-			while(getline(man_file, line))
+			while(getline(inst_man_file, line))
 			{
-				if (!std::filesystem::exists(target_cache + "install" + line))
+				if (buffer.str().find(line) == std::string::npos)
 				{
 					if (verbose)
 						exec_cmd(SU_CMD + " rm -v " + install_path + line);
 					else
-						exec_cmd(SU_CMD + " rm " + install_path + line);
+						exec_cmd(SU_CMD + " rm " + install_path + line + " 2>/dev/null");
 				}
 			}
 		}
 		man_file.close();
+		inst_man_file.close();
 
 
 		// Creating manifest
 		print_msg(MSG_PKG_MANIFEST, target_name);
+		
+		if (std::filesystem::exists(target_cache + "manifest"))
+			std::filesystem::remove(target_cache + "manifest");
 
 		std::ofstream file(target_cache + "manifest");
 
@@ -150,8 +160,6 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 		// Installing to INSTALL_PATH
 		if (verbose)
 			print_msg(MSGV_PKG_INST_FILES, target_name);
-
-		std::string target_ins_path = install_path + INSTALL_PATH + target_name + "/";
 
 		if (std::filesystem::exists(target_ins_path))
 			exec_cmd(SU_CMD + " rm -rf " + target_ins_path);

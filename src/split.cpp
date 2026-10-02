@@ -120,14 +120,26 @@ uint64_t cross_stov(const std::string& str)
 {
 	try
 	{
-		constexpr uint VAR_SIZE = 8;
+		constexpr uint PART_SIZE = 4;
+		constexpr uint VAR_SIZE = 4 * PART_SIZE + 1;
 
 		std::string final_str = "1";
+		std::string part;
 
-		for (const char c : str)
+		for (const char ch : str)
 		{
-			if (c >= '0' && c <= '9')
-				final_str += c;
+			if (ch >= '0' && ch <= '9')
+				part += ch;
+			else if (ch == '.')
+			{
+				while (part.size() < PART_SIZE)
+				{
+					part.insert(0, "0");
+				}
+
+				final_str += part;
+				part.clear();
+			}
 		}
 
 		while (final_str.size() < VAR_SIZE)
