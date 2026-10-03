@@ -126,7 +126,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 					if (verbose)
 						exec_cmd(SU_CMD + " rm -v " + install_path + line);
 					else
-						exec_cmd(SU_CMD + " rm " + install_path + line + " 2>/dev/null");
+						exec_cmd(SU_CMD + " rm " + install_path + line);
 				}
 			}
 		}
@@ -167,12 +167,8 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 		if (!std::filesystem::exists(target_ins_path))
 			exec_cmd(SU_CMD + " mkdir " + target_ins_path);
 
-		if (std::filesystem::exists(target_cache + "files"))
-			exec_cmd(SU_CMD + " cp -r " + target_cache + "files " + target_ins_path);
-
-		exec_cmd(SU_CMD + " cp " + target_cache + target_name + ".crs " + target_ins_path + "config.crs ");
+		exec_cmd(SU_CMD + " cp " + target_cache + target_name + ".crs " + target_ins_path + "config.crs");
 		exec_cmd(SU_CMD + " cp " + target_cache  + "manifest " + target_ins_path);
-
 		exec_cmd(SU_CMD + " chmod -R 755 " + target_ins_path);
 
 
@@ -189,8 +185,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 
 
 		// Copying files
-		const std::string cpv_cmd = SU_CMD + " cp -rv --preserve=mode,timestamps --remove-destination ";
-		const std::string cp_cmd  = SU_CMD + " cp -r  --preserve=mode,timestamps --remove-destination ";
+		const std::string cp_cmd  = SU_CMD + " cp -r" + ((verbose) ? "v" : "") + " --preserve=mode,timestamps --remove-destination ";
 
 		for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
 		{
@@ -209,21 +204,14 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 				relative_path += "/" + read_symlink(std::filesystem::path(old_path)).string();
 			}
 
-			if (verbose)
-				exec_cmd(cpv_cmd + full_path + " " + relative_path + "/");
-			else
-				exec_cmd(cp_cmd + full_path + " " + relative_path + "/ 2>/dev/null");
+			exec_cmd(cp_cmd + full_path + " " + relative_path + "/");
 		}
 
-		if (verbose)
-			exec_cmd(cpv_cmd + target_cache + "install/* " + install_path + "/");
-		else
-			exec_cmd(cp_cmd + target_cache + "install/* " + install_path + "/ 2>/dev/null");
-
+		exec_cmd(cp_cmd + target_cache + "install/* " + install_path + "/");
 
 		if (std::filesystem::exists(target_cache + "tmp"))
 		{
-			exec_cmd("cp -r " + target_cache + "tmp/* " + target_cache + "/install/etc/ 2>/dev/null");
+			std::filesystem::copy(target_cache + "tmp", target_cache + "/install/etc", std::filesystem::copy_options::overwrite_existing);
 			std::filesystem::remove_all(target_cache + "tmp");
 		}
 

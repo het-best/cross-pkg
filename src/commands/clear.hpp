@@ -29,4 +29,4 @@
 
 
 
-void c_clear(const std::vector<std::pair<char, std::string>> &flags);
+bool c_clear(const std::vector<std::pair<char, std::string>> &flags);

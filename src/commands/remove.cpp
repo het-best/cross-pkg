@@ -24,15 +24,17 @@
 #include <iostream>
 
 #include "search.hpp"
+#include "build.hpp"
 #include "../cmd.hpp"
 #include "../defines.hpp"
 #include "../messages.hpp"
 
 
 
-void c_remove(const std::vector<std::string> &targets, const std::vector<std::pair<char, std::string>> &flags)
+bool c_remove(const std::vector<std::string> &targets, const std::vector<std::pair<char, std::string>> &flags)
 {
 	// Checking flags
+	bool autoyes = false;
 	bool force = false;
 	bool verbose = false;
 
@@ -40,6 +42,10 @@ void c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 	{
 		switch (flag)
 		{
+			case 'y':
+				autoyes = true;
+				std::cout << FLAG_PREFIX << "Autoyes is enabled" << WHITE_COL << "\n";
+				break;
 			case 'f':
 				force = true;
 				std::cout << FLAG_PREFIX << "Force removing is enabled" << WHITE_COL << "\n";
@@ -58,6 +64,7 @@ void c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 	{
 		const std::string& target_name = targets[i];
 		const std::string& target_path = INSTALL_PATH + target_name;
+		const std::string& rm_cmd = SU_CMD + " rm -f" + std::string((verbose) ? "v" : "");
 
 
 		if (!std::filesystem::exists(target_path))
@@ -65,6 +72,10 @@ void c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 			print_msg(MSG_PKG_NOT_INSTALL, target_name);
 			continue;
 		}
+		
+		std::optional<pkg_info> info = get_pkg_info(target_path + "/config.crs");
+		if (!info.has_value())
+			continue;
 
 
 		// Checking dependents
@@ -72,12 +83,20 @@ void c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 		{
 			print_msg(MSG_PKG_CHECK_DEL, target_name);
 
-			if (std::string depends_str = get_pkg_dependents(target_name); depends_str != "")
+			if (std::string depends_str = get_pkg_dependents(info.value()); depends_str != "")
 			{
 				depends_str.erase(depends_str.length() - 2);
 				print_msg(MSG_PKG_HAS_DEPENDS, target_name, depends_str);
-				return;
+				return false;
 			}
+		}
+
+
+		// Running before remove script
+		if (!run_build("before-remove", target_path, info->bef_remove, false, autoyes))
+		{
+			print_msg(MSG_PKG_NOT_REMOVED, target_name);
+			return false;
 		}
 
 
@@ -87,31 +106,32 @@ void c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 		// Manifest
 		std::ifstream file(INSTALL_PATH + target_name + "/manifest");
 		if (!file.is_open())
-		{
-			return;
-		}
+			return false;
 
 		std::string line;
 		while(getline(file, line))
 		{
-			if (verbose)
-				exec_cmd(SU_CMD + " rm -fv '" + line + "'");
-			else
-				exec_cmd(SU_CMD + " rm -f '" + line + "'");
+			if (!exec_cmd(rm_cmd + " '" + line + "'"))
+			{
+				print_msg(MSG_PKG_NOT_REMOVED, target_name);
+				return false;
+			}
 		}
 		file.close();
 
-		if (verbose)
-			exec_cmd(SU_CMD + " rm -rfv " + target_path);
-		else
-			exec_cmd(SU_CMD + " rm -rf " + target_path);
-
-		if (!std::filesystem::exists(target_path))
-			print_msg(MSG_PKG_REMOVED, target_name);
-		else
+		if (!exec_cmd(rm_cmd + "r " + target_path))
 		{
 			print_msg(MSG_PKG_NOT_REMOVED, target_name);
-			return;
+			return false;
 		}
+
+		print_msg(MSG_PKG_REMOVED, target_name);
+
+
+		// Running after remove script
+		run_build("after-remove", target_path, info->aft_remove, false, autoyes);
 	}
+
+
+	return true;
 }

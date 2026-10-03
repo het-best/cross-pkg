@@ -18,6 +18,7 @@
  * Flags:
  * -F Disables dependents checking
  * -V Enables verbose output
+ * -Y Auto-yes, autoresponds yes to all messages (including continue prompts)
  */
 
 #pragma once
@@ -27,4 +28,4 @@
 
 
 
-void c_remove(const std::vector<std::string> &targets, const std::vector<std::pair<char, std::string>> &flags);
+bool c_remove(const std::vector<std::string> &targets, const std::vector<std::pair<char, std::string>> &flags);

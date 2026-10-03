@@ -106,7 +106,7 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
 
 
 	// Dependents
-	final_str = get_pkg_dependents(target);
+	final_str = get_pkg_dependents(info.value());
 
 	if (final_str.empty())
 		std::cout << PREFIX << "Package dependents: " << CYAN_COL << "None" << WHITE_COL << "\n";
@@ -332,8 +332,10 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
 			}
 			i--;
 		}
-		else if (line == "-depends-")
+		else if (line == "-depends-" || line == "-group-")
 		{
+			std::string old_line = line;
+
 			for(; i < lines.size(); i++)
 			{
 				line = lines[i];
@@ -346,39 +348,28 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
 
 				// If commented
 				if (line.front() != '#')
-					info.depends.push_back(line);
+				{
+					if (old_line == "-depends-")
+						info.depends.push_back(line);
+					else if (old_line == "-group-")
+						info.groups.push_back(line);
+				}
 			}
 			i--;
 		}
-		else if (line == "-rebuild-depends-")
-		{
-			for(; i < lines.size(); i++)
-			{
-				line = lines[i];
-				if (line.empty())
-					continue;
-
-				if (line.front() == '-' && line.back() == '-')
-					break;
-
-
-				// If commented
-				if (line.front() != '#')
-					info.rebuild_depends.push_back(line);
-			}
-			i--;
-		}
-		else if (line == "-before-build-" || line == "-build-" || line == "-after-install-")
+		else if (line == "-build-" || line == "-after-install-" || line == "-before-remove-" || line == "-after-remove-")
 		{
 			// So that 3 if statements can be reduced to one
 			std::string* build_str = nullptr;
 
-			if (line == "-before-build-")
-				build_str = &info.bef_build;
-			else if (line == "-build-")
+			if (line == "-build-")
 				build_str = &info.build;
-			else
+			else if (line == "-after-install-")
 				build_str = &info.aft_install;
+			else if (line == "-before-remove-")
+				build_str = &info.bef_remove;
+			else if (line == "-after-remove-")
+				build_str = &info.aft_remove;
 
 			if (lines[i].find("#!") == std::string::npos)
 				*build_str += "#!/bin/sh -e\n";
@@ -410,18 +401,14 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
 	return info;
 }
 
-std::string get_pkg_dependents(const std::string &target)
+std::string get_pkg_dependents(const pkg_info& target)
 {
 	std::string depends_str = "";
 
 	for (const std::filesystem::path path : std::filesystem::directory_iterator(INSTALL_PATH))
 	{
-		std::optional<pkg_info> pkg_info = get_pkg_info(path.string() + "/config.crs", false);
-		if (!pkg_info.has_value())
-			continue;
-
-		if (std::ranges::find(pkg_info->depends, target) != pkg_info->depends.end())
-			depends_str += pkg_info->name + ", ";
+		if (std::ranges::find(target.depends, target.name) != target.depends.end())
+			depends_str += target.name + ", ";
 	}
 
 	return depends_str;

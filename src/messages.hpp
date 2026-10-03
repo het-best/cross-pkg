@@ -20,6 +20,7 @@ enum msg_type
 	MSG_DEV_MODE = 7,
 	MSG_STD_ERR = 8,
 	MSG_UNK_ERR = 9,
+	MSG_NO_SU = 10,
 
 	// 100 - 199 Build
 	MSG_BUILD_ABORTING = 100,
@@ -46,9 +47,10 @@ enum msg_type
 	MSGV_TIMES_WRITE = 120,
 
 	// 200 - 299 Clear
-	MSG_CACHE_CLEAR_NO_PKGS = 200,
-	MSG_CACHE_CLEAR_PKGS = 201,
-	MSG_CACHE_CLEARED = 202,
+	MSG_CLEAR_ABORTING = 200,
+	MSG_CACHE_CLEAR_NO_PKGS = 201,
+	MSG_CACHE_CLEAR_PKGS = 202,
+	MSG_CACHE_CLEARED = 203,
 
 	// 300 - 399 Download
 	MSG_DOWN_ABORTING = 300,
@@ -83,12 +85,13 @@ enum msg_type
 	MSG_TOTAL_INSTALLED = 501,
 
 	// 600 - 699 Remove
-	MSG_PKG_NOT_INSTALL = 600,
-	MSG_PKG_CHECK_DEL = 601,
-	MSG_PKG_HAS_DEPENDS = 602,
-	MSG_PKG_REMOVING = 603,
-	MSG_PKG_REMOVED = 604,
-	MSG_PKG_NOT_REMOVED = 605,
+	MSG_REMOVE_ABORTING = 600,
+	MSG_PKG_NOT_INSTALL = 601,
+	MSG_PKG_CHECK_DEL = 602,
+	MSG_PKG_HAS_DEPENDS = 603,
+	MSG_PKG_REMOVING = 604,
+	MSG_PKG_REMOVED = 605,
+	MSG_PKG_NOT_REMOVED = 606,
 
 	// 700 - 799 Search
 	MSG_PKG_NOT_FOUND = 700,
@@ -116,11 +119,10 @@ enum msg_type
 	MSG_DOWN_INFO = 902,
 	MSG_INSTALL_INFO = 903,
 	MSG_LIST_INFO = 904,
-	MSG_ORPHANS_INFO = 905,
-	MSG_REMOVE_INFO = 906,
-	MSG_SEARCH_INFO = 907,
-	MSG_UPDATE_INFO = 908,
-	MSG_VERSION_INFO = 909,
+	MSG_REMOVE_INFO = 905,
+	MSG_SEARCH_INFO = 906,
+	MSG_UPDATE_INFO = 907,
+	MSG_VERSION_INFO = 908,
 };
 
 
@@ -136,6 +138,7 @@ const std::array gen_msgs =
 	PREFIX + ORANGE_COL + "This function is for developers only" + WHITE_COL + "\n",
 	ERR_PREFIX + "Error was thrown: \"{ARG1}\"\n",
 	ERR_PREFIX + "Unknown error was thrown\n",
+	ERR_PREFIX + "Cannot find working sudo or doas\n",
 };
 
 const std::array build_msgs =
@@ -168,6 +171,7 @@ const std::array build_msgs =
 
 const std::array clear_msgs =
 {
+	PREFIX + RED_COL + "Aborting clearing" + WHITE_COL + "\n",
 	PREFIX + MAG_COL + "No packages will be cleaned" + WHITE_COL + "\n",
 	PREFIX + "Packages cache will be cleaned: " + BLUE_COL + "{ARG1}" + WHITE_COL + "\n",
 	PREFIX + "Cache was successfully cleared\n",
@@ -213,6 +217,7 @@ const std::array list_msgs =
 
 const std::array remove_msgs =
 {
+	PREFIX + RED_COL + "Aborting removing" + WHITE_COL + "\n",
 	ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " not installed" + WHITE_COL + "\n",
 	PREFIX + GREEN_COL + "{ARG1}" + WHITE_COL + " Checking if package removable\n",
 	ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " has dependents: " + MAG_COL + "{ARG2}" + WHITE_COL + "\n",
@@ -255,7 +260,6 @@ const std::array help_msgs =
 	PREFIX + BLUE_COL + "download " + WHITE_COL + "Downloads package sources\n",
 	PREFIX + BLUE_COL + "install  " + WHITE_COL + "Installs package\n",
 	PREFIX + BLUE_COL + "list	 " + WHITE_COL + "Prints out information about installed packages and their versions\n",
-	PREFIX + BLUE_COL + "orphans  " + WHITE_COL + "Prints out all packages without dependents\n",
 	PREFIX + BLUE_COL + "remove   " + WHITE_COL + "Removes package\n",
 	PREFIX + BLUE_COL + "search   " + WHITE_COL + "Prints out information about package\n",
 	PREFIX + BLUE_COL + "update   " + WHITE_COL + "Updates all packages and fetches their latest versions from the repos\n",

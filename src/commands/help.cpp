@@ -35,7 +35,6 @@ void c_help(const std::string &target)
 		print_msg(MSG_DOWN_INFO);
 		print_msg(MSG_INSTALL_INFO);
 		print_msg(MSG_LIST_INFO);
-		print_msg(MSG_ORPHANS_INFO);
 		print_msg(MSG_REMOVE_INFO);
 		print_msg(MSG_SEARCH_INFO);
 		print_msg(MSG_UPDATE_INFO);
@@ -81,15 +80,12 @@ void c_help(const std::string &target)
 	{
 		print_msg(MSG_LIST_INFO);
 	}
-	else if (target == "orphans")
-	{
-		print_msg(MSG_ORPHANS_INFO);
-	}
 	else if (target == "remove")
 	{
 		print_msg(MSG_REMOVE_INFO);
 		std::cout << CYAN_COL << " -F " << WHITE_COL << "Disables dependents checking\n";
 		std::cout << CYAN_COL << " -V " << WHITE_COL << "Enables verbose output\n";
+		std::cout << CYAN_COL << " -Y " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
 	}
 	else if (target == "search")
 	{
@@ -99,9 +95,9 @@ void c_help(const std::string &target)
 	else if (target == "update")
 	{
 		print_msg(MSG_UPDATE_INFO);
-		std::cout << CYAN_COL << " -Y	 " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
 		std::cout << CYAN_COL << " -S ... " << WHITE_COL << "Fetching sleep time in seconds\n";
 		std::cout << CYAN_COL << " -V	 " << WHITE_COL << "Enables verbose output\n";
+		std::cout << CYAN_COL << " -Y	 " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
 	}
 	else if (target == "version")
 	{

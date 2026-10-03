@@ -18,6 +18,7 @@
 #include <iostream>
 #include <unistd.h>
 #include <vector>
+#include <unistd.h>
 
 #include "commands/build.hpp"
 #include "commands/clear.hpp"
@@ -30,7 +31,6 @@
 #include "commands/download.hpp"
 #include "commands/search.hpp"
 #include "commands/install.hpp"
-#include "commands/orphans.hpp"
 #include "commands/remove.hpp"
 #include "commands/update.hpp"
 
@@ -42,27 +42,29 @@
 int main(const int argc, char* argv[])
 {
 	// Checking available commands
-	if (DOWN_CMD.empty())
-	{
-		if (exec_cmd("curl --help >/dev/null 2>&1"))
-			DOWN_CMD = "curl";
-		else if (exec_cmd("wget --help >/dev/null 2>&1"))
-			DOWN_CMD = "wget";
-	}
+#ifdef WITH_LIBCURL
+	if (!access("/usr/bin/curl", X_OK))
+		DOWN_CMD = "curl";
+	else if (!access("/usr/bin/wget", X_OK))
+		DOWN_CMD = "wget";
+#endif
 	
-	if (getenv("CROSS_SU"))
-		SU_CMD = getenv("CROSS_SU");
+	if (getenv("SU_CMD"))
+		SU_CMD = getenv("SU_CMD");
 
 	if (getuid() != 0)
 	{
 		if (SU_CMD.empty())
 		{
-			if (exec_cmd("doas -C /etc/doas.conf >/dev/null 2>&1"))
+			if (!access("/usr/bin/doas", X_OK) && (argc < 3 || static_cast<std::string>(argv[2]) != "opendoas"))
 				SU_CMD = "doas";
-			else if (exec_cmd("sudo --help >/dev/null 2>&1"))
+			else if (!access("/usr/bin/sudo", X_OK) && (argc < 3 || static_cast<std::string>(argv[2]) != "sudo"))
 				SU_CMD = "sudo";
-			else if (exec_cmd("eun0 --help >/dev/null 2>&1"))
-				SU_CMD = "run0";
+			else
+			{
+				print_msg(MSG_NO_SU);
+				return 1;
+			}
 		}
 	}
 
@@ -160,7 +162,13 @@ int main(const int argc, char* argv[])
 				print_msg(MSG_BUILD_SUC);
 		}
 		else if (command == "clear" || command == "c")
-			c_clear(flags);
+		{
+			if (!c_clear(flags))
+			{
+				print_msg(MSG_CLEAR_ABORTING);
+				result = 1;
+			}
+		}
 		else if (command == "download" || command == "d")
 		{
 			if (args.empty())
@@ -187,8 +195,6 @@ int main(const int argc, char* argv[])
 		}
 		else if (command == "list" || command == "l")
 			c_list();
-		else if (command == "orphans" || command == "o")
-			c_orphans();
 		else if (command == "remove" || command == "r")
 		{
 			if (args.empty())
@@ -197,7 +203,13 @@ int main(const int argc, char* argv[])
 				result = 1;
 			}
 			else
-				c_remove(args, flags);
+			{
+				if (!c_remove(args, flags))
+				{
+					print_msg(MSG_REMOVE_ABORTING);
+					result = 1;
+				}
+			}
 		}
 		else if (command == "search" || command == "s")
 		{

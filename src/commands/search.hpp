@@ -48,9 +48,11 @@ struct pkg_info
 	std::vector<std::tuple<source_type, std::string, std::string>> sources;
 	std::vector<std::string> depends;
 	std::vector<std::string> rebuild_depends;
-	std::string bef_build;
 	std::string build;
 	std::string aft_install;
+	std::string bef_remove;
+	std::string aft_remove;
+	std::vector<std::string> groups;
 };
 
 
@@ -58,5 +60,5 @@ struct pkg_info
 void c_search(const std::string &target, const std::vector<std::pair<char, std::string>> &flags);
 
 std::string get_target_path(const std::string& target);
-std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, bool print_log = true);
-std::string get_pkg_dependents(const std::string &target);
+std::optional<pkg_info> get_pkg_info(const std::filesystem::path& target_path, bool print_log = true);
+std::string get_pkg_dependents(const pkg_info& target);

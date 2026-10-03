@@ -25,7 +25,7 @@
 
 
 
-void c_clear(const std::vector<std::pair<char, std::string>> &flags)
+bool c_clear(const std::vector<std::pair<char, std::string>> &flags)
 {
 	// Checking flags
 	bool autoyes = false;
@@ -103,7 +103,7 @@ void c_clear(const std::vector<std::pair<char, std::string>> &flags)
 	else
 	{
 		print_msg(MSG_CACHE_CLEAR_NO_PKGS);
-		return;
+		return true;
 	}
 
 	print_msg(MSG_CACHE_CLEAR_PKGS, include_pkgs_str);
@@ -118,11 +118,9 @@ void c_clear(const std::vector<std::pair<char, std::string>> &flags)
 	// Deleting
 	for (std::string pkg : include_pkgs)
 	{
-		if (verbose)
-			exec_cmd(SU_CMD + " rm -rvf " + CACHE_PATH + pkg);
-		else
-			exec_cmd(SU_CMD + " rm -rf " + CACHE_PATH + pkg);
+		std::filesystem::remove_all(CACHE_PATH + pkg);
 	}
 
 	print_msg(MSG_CACHE_CLEARED);
+	return true;
 }

@@ -56,17 +56,20 @@ Also git+ prefix can have @ symbol with commit has after it to checkout to requi
 ### -depends-
 `Optional` Package dependencies, one package per line
 
-### -rebuild-depends-
-`Optional` Packages that needs to be rebuilded after building this package, same syntax as -depends-
-
-### -before-build-
-`Optional` Script to run before building
+### -group-
+`Optional` Package groups, very specific use cases and do not do anything yet
 
 ### -build-
 `Required` Build script, first argument when calling this script is set to package install dir
 
 ### -after-install-
 `Optional` Script to run after installing
+
+### -before-remove-
+`Optional` Script to run before removing
+
+### -after-remove-
+`Optional` Script to run after removing
 
 Example package script
 
@@ -75,23 +78,25 @@ Example package script
 	-version-
 		1.0
 	-sources-
-		url+https://github.com/het-best/cross-pkg
+		git+https://codeberg.org/hetbest/cross-pkg.git@c92e3d7d9a3994d38a35cf9abedd06fab19de177
 	-depends-
 		cmake
 		gcc
-	-rebuild-depends-
-		wayland
-	-before-build-
-		echo "This is before-build script!"
+    -group-
+		pkg
 	-build-
 		cmake -S . -B build \
 			-D CMAKE_INSTALL_PREFIX=/usr \
 			-D CMAKE_BUILD_TYPE=Release
 		
 		cmake --build build
-		cmake --install build --prefix "$1"
+		DESTDIR="$1" cmake --install build
 	-after-install-
 		echo "This is after-install script!"
+	-before-remove-
+		echo "This is before-remove script!"
+	-after-remove-
+		echo "This is after-remove script!"
 
 ## Configuring mirrors
 To add mirror to some source you need to create file with your host name, 

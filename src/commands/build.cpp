@@ -298,10 +298,6 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
 		std::chrono::time_point build_start = std::chrono::system_clock::now();
 
 
-		// Before build script
-		run_build("before-build", target_cache, target_infos[i].bef_build, build_params, autoyes);
-
-
 		// Building
 		print_msg(MSG_PKG_BUILDING, target_name, std::to_string(i + 1) + "/" + std::to_string(target_infos.size()));
 
