@@ -13,14 +13,6 @@
 	GNU General Public License for more details.
  */
 
-/* update - Updates all packages and fetches their latest versions from the repos
- *
- * Flags:
- * -Y	 Auto-yes, autoresponds yes to all messages (including continue prompts)
- * -S ... Fetching sleep time in seconds
- * -F	 Do not fetch version
- */
-
 #pragma once
 
 #include <string>

@@ -17,19 +17,25 @@
 
 
 #include <string>
+#include <fstream>
 
 
 
-#define CROSS_VERSION "2.0"
+#define CROSS_VERSION "2.3"
 
 #define MAIN_PATH "/var/db/cross/"
 #define INSTALL_PATH "/var/db/cross/install/"
 #define CACHE_PATH "/var/db/cross/cache/"
 #define MIRRORS_PATH "/var/db/cross/mirrors/"
+#define ALT_PATH "/var/db/cross/alternatives/"
+#define LOG_PATH "/var/db/cross/logs/"
 #define REPOS_PATH "/usr/repos/"
 
-#define CFLAGS "-D_FORTIFY_SOURCE=2 -fstack-protector-strong -O2 -pipe -march=native"
-#define BUILD_ARGS "CFLAGS=\"" CFLAGS "\" CXXFLAGS=\"$CFLAGS\" MAKEFLAGS=\"-j" + std::to_string(std::thread::hardware_concurrency()) + "\""
+#define CFLAGS "-fPIE -D_FORTIFY_SOURCE=2 -fstack-protector-strong -O2 -pipe -march=native"
+#define LDFLAGS "-pie -Wl,-z,relro -Wl,-z,now -Wl,-z,noexecstack"
+#define BUILD_ARGS "LDFLAGS=\"" LDFLAGS "\" CFLAGS=\"" CFLAGS "\" CXXFLAGS=\"" CFLAGS "\" MAKEFLAGS=\"-j" + std::to_string(std::thread::hardware_concurrency()) + "\""
+
+inline std::ofstream log_file;
 
 inline std::string SU_CMD;
 inline std::string DOWN_CMD;

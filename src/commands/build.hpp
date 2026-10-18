@@ -13,21 +13,6 @@
 	GNU General Public License for more details.
  */
 
-/* build - Builds and installed packages
- *
- * Flags:
- * -C	 Disable checking dependencies
- * -D	 Do not download sources
- * -F	 Force redownloading sources even if they are already present
- * -I ... Do not install packages or if argument is given install them to this path
- * -P	 Show targets paths instead of names
- * -R	 Remove standard build params
- * -S	 Disable striping install binaries
- * -U	 Do not remove already unpacked/compiled source
- * -V	 Enables verbose output
- * -Y	 Auto-yes, autoresponds yes to all messages (including continue prompts)
- */
-
 #pragma once
 
 #include <optional>

@@ -24,6 +24,7 @@
 #include "commands/clear.hpp"
 #include "commands/help.hpp"
 #include "commands/list.hpp"
+#include "commands/own.hpp"
 #include "commands/version.hpp"
 #include "cmd.hpp"
 #include "defines.hpp"
@@ -41,6 +42,11 @@
 
 int main(const int argc, char* argv[])
 {
+	// Opening log file
+	const std::string log_name = (argc > 1 ? static_cast<std::string>(argv[1]) : "none") + "-" + (argc > 2 ? static_cast<std::string>(argv[2]) : "none") + "-";
+	log_file = std::ofstream(LOG_PATH + log_name + std::to_string(std::chrono::duration_cast<std::chrono::seconds>(std::chrono::system_clock::now().time_since_epoch()).count()) + ".log");
+
+
 	// Checking available commands
 #ifdef WITH_LIBCURL
 	if (!access("/usr/bin/curl", X_OK))
@@ -79,11 +85,21 @@ int main(const int argc, char* argv[])
 	if (!std::filesystem::exists(MIRRORS_PATH))
 		exec_cmd(SU_CMD + " mkdir " + static_cast<std::string>(MIRRORS_PATH));
 
+	if (!std::filesystem::exists(ALT_PATH))
+		exec_cmd(SU_CMD + " mkdir " + static_cast<std::string>(ALT_PATH));
+
 	if (!std::filesystem::exists(CACHE_PATH))
 	{
 		exec_cmd(SU_CMD + " mkdir " + static_cast<std::string>(CACHE_PATH));
 		exec_cmd(SU_CMD + " chown root:wheel " + static_cast<std::string>(CACHE_PATH));
-		exec_cmd(SU_CMD + " chmod -R 750 " + static_cast<std::string>(CACHE_PATH));
+		exec_cmd(SU_CMD + " chmod -R 770 " + static_cast<std::string>(CACHE_PATH));
+	}
+
+	if (!std::filesystem::exists(LOG_PATH))
+	{
+		exec_cmd(SU_CMD + " mkdir " + static_cast<std::string>(LOG_PATH));
+		exec_cmd(SU_CMD + " chown root:wheel " + static_cast<std::string>(LOG_PATH));
+		exec_cmd(SU_CMD + " chmod -R 770 " + static_cast<std::string>(LOG_PATH));
 	}
 
 
@@ -130,22 +146,19 @@ int main(const int argc, char* argv[])
 
 
 	bool result = 0;
-#ifdef WITH_LIBCURL
-	curl_global_init(CURL_GLOBAL_DEFAULT);
-#endif
-	
+
 
 	// Checking which argument was provided
 	try
 	{
-		if (command == "help" || command == "h")
+		if (command == "help")
 		{
 			if (args.empty())
 				c_help();
 			else
 				c_help(args[0]);
 		}
-		else if (command == "build" || command == "b")
+		else if (command == "build")
 		{
 			if (args.empty())
 			{
@@ -161,7 +174,7 @@ int main(const int argc, char* argv[])
 			else
 				print_msg(MSG_BUILD_SUC);
 		}
-		else if (command == "clear" || command == "c")
+		else if (command == "clr")
 		{
 			if (!c_clear(flags))
 			{
@@ -169,7 +182,7 @@ int main(const int argc, char* argv[])
 				result = 1;
 			}
 		}
-		else if (command == "download" || command == "d")
+		else if (command == "down")
 		{
 			if (args.empty())
 			{
@@ -183,7 +196,7 @@ int main(const int argc, char* argv[])
 				result = 1;
 			}
 		}
-		else if (command == "install" || command == "i")
+		else if (command == "ins")
 		{
 			if (args.empty())
 			{
@@ -193,9 +206,25 @@ int main(const int argc, char* argv[])
 			else
 				c_install(args, flags);
 		}
-		else if (command == "list" || command == "l")
+		else if (command == "list")
 			c_list();
-		else if (command == "remove" || command == "r")
+		else if (command == "own")
+		{
+			if (args.empty())
+			{
+				print_msg(MSG_NO_TARGET);
+				result = 1;
+			}
+			else
+			{
+				if (!c_own(args[0]))
+				{
+					print_msg(MSG_OWN_ABORTING);
+					result = 1;
+				}
+			}
+		}
+		else if (command == "rem")
 		{
 			if (args.empty())
 			{
@@ -211,7 +240,7 @@ int main(const int argc, char* argv[])
 				}
 			}
 		}
-		else if (command == "search" || command == "s")
+		else if (command == "search")
 		{
 			if (args.empty())
 			{
@@ -221,9 +250,9 @@ int main(const int argc, char* argv[])
 			else
 				c_search(args[0], flags);
 		}
-		else if (command == "update" || command == "u")
+		else if (command == "upd")
 			c_update(flags);
-		else if (command == "version" || command == "v")
+		else if (command == "ver")
 			c_version(flags);
 #ifdef DEV_MODE
 		else if (command == "test")
@@ -258,9 +287,8 @@ int main(const int argc, char* argv[])
 	}
 
 
-#ifdef WITH_LIBCURL
-	curl_global_cleanup();
-#endif
+	log_file.close();
+
 
 	return result;
 }

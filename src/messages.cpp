@@ -55,6 +55,8 @@ void print_msg(const msg_type msg, const std::string &arg1, const std::string &a
 
 
 	std::cout << msg_str << WHITE_COL;
+	log_file << msg_str << WHITE_COL;
+	log_file.flush();
 }
 
 std::string replace_occ(std::string str, const std::string &occurance, const std::string &with)

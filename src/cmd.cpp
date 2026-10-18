@@ -19,6 +19,8 @@
 #include <cstdio>
 #include <array>
 
+#include "defines.hpp"
+
 
 
 bool exec_cmd(const std::string &command)
@@ -30,9 +32,12 @@ bool exec_cmd(const std::string &command)
 
 
 	// Reading the stream
+	log_file << "Executing command: \"" << command << "\"\n";
 	while (fgets(buffer.data(), buffer.size(), pipe) != nullptr)
 	{
 		std::cout << buffer.data() << std::flush;
+		log_file << buffer.data();
+		log_file.flush();
 	}
 
 

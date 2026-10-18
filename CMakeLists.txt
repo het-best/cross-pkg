@@ -25,6 +25,8 @@ add_executable(cross-pkg
 		src/commands/install.hpp
 		src/commands/list.cpp
 		src/commands/list.hpp
+		src/commands/own.cpp
+		src/commands/own.hpp
 		src/commands/remove.cpp
 		src/commands/remove.hpp
 		src/commands/search.cpp
@@ -36,7 +38,6 @@ add_executable(cross-pkg
 )
 
 install(TARGETS cross-pkg DESTINATION bin)
-target_link_options(cross-pkg PRIVATE -static-libgcc -static-libstdc++)
 
 option(WITH_LIBCURL "Compile cross-pkg with libcurl instead of calling curl/wget command line utility (TURNING THIS OFF ALLOWS VULNERABILITIES TO BE EXPLOITED)" ON)
 if (WITH_LIBCURL)

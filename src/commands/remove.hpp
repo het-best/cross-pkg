@@ -13,14 +13,6 @@
 	GNU General Public License for more details.
  */
 
-/* remove - Removes package
- *
- * Flags:
- * -F Disables dependents checking
- * -V Enables verbose output
- * -Y Auto-yes, autoresponds yes to all messages (including continue prompts)
- */
-
 #pragma once
 
 #include <string>

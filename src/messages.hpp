@@ -21,6 +21,9 @@ enum msg_type
 	MSG_STD_ERR = 8,
 	MSG_UNK_ERR = 9,
 	MSG_NO_SU = 10,
+	MSG_NO_FILE = 11,
+	MSG_LIST_OWN = 12,
+	MSG_OWN_ABORTING = 13,
 
 	// 100 - 199 Build
 	MSG_BUILD_ABORTING = 100,
@@ -75,10 +78,14 @@ enum msg_type
 	MSG_PKG_NO_TO_INST = 402,
 	MSG_PKG_MANIFEST = 403,
 	MSG_PKG_INSTALLED = 404,
+	MSG_PKG_GLIB_COMPILE = 405,
+	MSG_PKG_ALT_REPLACE = 406,
+	MSG_PKG_ALT_REPLACE_QW = 407,
+	MSG_PKG_ETC_REPLACE = 408,
 
-	MSGV_PKG_INST_FILE_FOUND = 405,
-	MSGV_PKG_REM_FILES = 406,
-	MSGV_PKG_INST_FILES = 407,
+	MSGV_PKG_INST_FILE_FOUND = 409,
+	MSGV_PKG_REM_FILES = 410,
+	MSGV_PKG_INST_FILES = 411,
 
 	// 500 - 599 List
 	MSG_NO_INSTALLED = 500,
@@ -95,11 +102,10 @@ enum msg_type
 
 	// 700 - 799 Search
 	MSG_PKG_NOT_FOUND = 700,
-	MSG_PKG_CONF_NO_EXT = 701,
-	MSG_PKG_CONF_NOT_FOUND = 702,
-	MSG_PKG_NO_FIELD = 703,
-	MSG_PKG_NO_PREFIX = 704,
-	MSG_PKG_UNK_PREFIX = 705,
+	MSG_PKG_CONF_NOT_FOUND = 701,
+	MSG_PKG_NO_FIELD = 702,
+	MSG_PKG_NO_PREFIX = 703,
+	MSG_PKG_UNK_PREFIX = 704,
 
 	// 800 - 899 Update
 	MSG_CROSS_VER = 800,
@@ -119,14 +125,15 @@ enum msg_type
 	MSG_DOWN_INFO = 902,
 	MSG_INSTALL_INFO = 903,
 	MSG_LIST_INFO = 904,
-	MSG_REMOVE_INFO = 905,
-	MSG_SEARCH_INFO = 906,
-	MSG_UPDATE_INFO = 907,
-	MSG_VERSION_INFO = 908,
+	MSG_OWN_INFO = 905,
+	MSG_REMOVE_INFO = 906,
+	MSG_SEARCH_INFO = 907,
+	MSG_UPDATE_INFO = 908,
+	MSG_VERSION_INFO = 909,
 };
 
 
-const std::array gen_msgs =
+inline const std::array gen_msgs =
 {
 	ERR_PREFIX + "No arguments were provided, see " + BLUE_COL + "help" + WHITE_COL + "\n",
 	ERR_PREFIX + "Unknown argument " + WHITE_COL + "\"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\"\n",
@@ -139,9 +146,12 @@ const std::array gen_msgs =
 	ERR_PREFIX + "Error was thrown: \"{ARG1}\"\n",
 	ERR_PREFIX + "Unknown error was thrown\n",
 	ERR_PREFIX + "Cannot find working sudo or doas\n",
+	ERR_PREFIX + "File " + WHITE_COL + "\"" + ORANGE_COL + "{ARG1}" + RED_COL + "\" does not exist" + WHITE_COL + "\n",
+	PREFIX + "File is owned by: " + BLUE_COL + "{ARG1}" + WHITE_COL + "\n",
+	PREFIX + RED_COL + "Aborting owns" + WHITE_COL + "\n",
 };
 
-const std::array build_msgs =
+inline const std::array build_msgs =
 {
 	PREFIX + RED_COL + "Aborting building" + WHITE_COL + "\n",
 	PREFIX + "Building explicit: " + BLUE_COL + "{ARG1}" + WHITE_COL + "\n",
@@ -161,7 +171,7 @@ const std::array build_msgs =
 	PREFIX + "Previous build took " + BLUE_COL + "{ARG1}" + WHITE_COL + "s, " + ORANGE_COL + "{ARG2}" + WHITE_COL + "% longer this time\n",
 	PKG_PREFIX + "Package building failed :[\n",
 	PREFIX + "Packages were built successfully :D\n",
-	PREFIX + MAG_COL + "Do you want to run this build file? " + CYAN_COL + "[Y/yy/n]" + WHITE_COL + ": ",
+	PREFIX + MAG_COL + "Do you want to run this build file? " + CYAN_COL + "[y/yy/N]" + WHITE_COL + ": ",
 
 	PREFIX + "Getting implicit targets\n",
 	PKG_PREFIX + "Build arguments: " + CYAN_COL + "{ARG2}" + WHITE_COL + "\n",
@@ -169,7 +179,7 @@ const std::array build_msgs =
 	PREFIX + "Writing build times\n",
 };
 
-const std::array clear_msgs =
+inline const std::array clear_msgs =
 {
 	PREFIX + RED_COL + "Aborting clearing" + WHITE_COL + "\n",
 	PREFIX + MAG_COL + "No packages will be cleaned" + WHITE_COL + "\n",
@@ -177,7 +187,7 @@ const std::array clear_msgs =
 	PREFIX + "Cache was successfully cleared\n",
 };
 
-const std::array down_msgs =
+inline const std::array down_msgs =
 {
 	PREFIX + RED_COL + "Aborting downloading" + WHITE_COL + "\n",
 	PKG_PREFIX + "Reading sources\n",
@@ -196,26 +206,30 @@ const std::array down_msgs =
 	PKG_PREFIX + "Starting downloading sources\n",
 };
 
-const std::array install_msgs =
+inline const std::array install_msgs =
 {
 	ERR_PREFIX + "Package " + WHITE_COL + "\"" + BLUE_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " cache is not found/valid" + WHITE_COL + "\n",
 	PKG_PREFIX + "Installing package ({ARG2})\n",
 	PKG_PREFIX + "Nothing to install\n",
 	PKG_PREFIX + "Creating manifest\n",
 	PKG_PREFIX + "Successfully installed package ({ARG2})\n",
+	PKG_PREFIX + "Compiling glib schemas...\n",
+	PREFIX + "File \"" + ORANGE_COL + "{ARG1}" + WHITE_COL + "\" is already owned by another package: "+ GREEN_COL + "{ARG2}" + WHITE_COL + "\n",
+	PREFIX + "Do you want to overwrite it? " + CYAN_COL + "[Y/yy/n]" + WHITE_COL + ": ",
+	PREFIX + "Package wants to overwrite file \"" + ORANGE_COL + "{ARG1}" + WHITE_COL + "\"\n",
 
 	PREFIX + "Found \"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"\n",
 	PKG_PREFIX + "Removing previous package files...\n",
 	PKG_PREFIX + "Copying package files...\n",
 };
 
-const std::array list_msgs =
+inline const std::array list_msgs =
 {
 	PREFIX + "No installed packages found! (" + MAG_COL + "How did you managed to do this?" + WHITE_COL + ")\n",
 	PREFIX + "Total packages: " + GREEN_COL + "{ARG1}" + WHITE_COL + "\n",
 };
 
-const std::array remove_msgs =
+inline const std::array remove_msgs =
 {
 	PREFIX + RED_COL + "Aborting removing" + WHITE_COL + "\n",
 	ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " not installed" + WHITE_COL + "\n",
@@ -226,17 +240,16 @@ const std::array remove_msgs =
 	ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " has not been removed, maybe try to delete it by hand" + WHITE_COL + "\n",
 };
 
-const std::array search_msgs =
+inline const std::array search_msgs =
 {
 	ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " wasn't found" + WHITE_COL + "\n",
-	ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " configure file needs to have " + CYAN_COL  + ".crs" + RED_COL + " extension" + WHITE_COL + "\n",
 	ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " configure file wasn't found" + WHITE_COL + "\n",
 	ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " configure file doesnt have " + CYAN_COL + "-{ARG2}-" + RED_COL + " field" + WHITE_COL + "\n",
 	ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " configure file source field doesnt have prefix" + WHITE_COL + "\n",
 	ERR_PREFIX + "Package " + WHITE_COL + "\"" + CYAN_COL + "{ARG1}" + WHITE_COL + "\"" + RED_COL + " configure file source field has unknown prefix: " + WHITE_COL + "\"" + CYAN_COL + "{ARG2}" + WHITE_COL + "\"\n",
 };
 
-const std::array update_msgs =
+inline const std::array update_msgs =
 {
 	PREFIX + ORANGE_COL + "cross-pkg " + PINK_COL + "v" + CROSS_VERSION + WHITE_COL + "\n",
 	PREFIX + "Cross can be updated! " + ORANGE_COL + CROSS_VERSION + WHITE_COL + " -> " + GREEN_COL + "{ARG1}" + WHITE_COL + "\n",
@@ -253,17 +266,18 @@ const std::array update_msgs =
 	"under certain conditions." + WHITE_COL + "\n",
 };
 
-const std::array help_msgs =
+inline const std::array help_msgs =
 {
-	PREFIX + BLUE_COL + "build	" + WHITE_COL + "Builds and installed packages\n",
-	PREFIX + BLUE_COL + "clear	" + WHITE_COL + "Clears cache\n",
-	PREFIX + BLUE_COL + "download " + WHITE_COL + "Downloads package sources\n",
-	PREFIX + BLUE_COL + "install  " + WHITE_COL + "Installs package\n",
-	PREFIX + BLUE_COL + "list	 " + WHITE_COL + "Prints out information about installed packages and their versions\n",
-	PREFIX + BLUE_COL + "remove   " + WHITE_COL + "Removes package\n",
-	PREFIX + BLUE_COL + "search   " + WHITE_COL + "Prints out information about package\n",
-	PREFIX + BLUE_COL + "update   " + WHITE_COL + "Updates all packages and fetches their latest versions from the repos\n",
-	PREFIX + BLUE_COL + "version  " + WHITE_COL + "Print out information about cross version and fetches for updates\n",
+	PREFIX + BLUE_COL + "build  " + WHITE_COL + "Builds and installed packages\n",
+	PREFIX + BLUE_COL + "clr    " + WHITE_COL + "Clears cache\n",
+	PREFIX + BLUE_COL + "down   " + WHITE_COL + "Downloads package sources\n",
+	PREFIX + BLUE_COL + "ins    " + WHITE_COL + "Installs package\n",
+	PREFIX + BLUE_COL + "list   " + WHITE_COL + "Prints out information about installed packages and their versions\n",
+	PREFIX + BLUE_COL + "own    " + WHITE_COL + "Prints out owner of file\n",
+	PREFIX + BLUE_COL + "rem    " + WHITE_COL + "Removes package\n",
+	PREFIX + BLUE_COL + "search " + WHITE_COL + "Prints out information about package\n",
+	PREFIX + BLUE_COL + "upd    " + WHITE_COL + "Updates all packages and fetches their latest versions from the repos\n",
+	PREFIX + BLUE_COL + "vern   " + WHITE_COL + "Print out information about cross version and fetches for updates\n",
 };
 
 

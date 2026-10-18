@@ -13,13 +13,6 @@
 	GNU General Public License for more details.
  */
 
-/* install - Installs package
- *
- * Flags:
- * -I ... Do not install packages or if argument is given install them to this path
- * -V	 Enables verbose output
- */
-
 #pragma once
 
 #include <string>

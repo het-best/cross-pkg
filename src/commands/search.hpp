@@ -13,12 +13,6 @@
 	GNU General Public License for more details.
  */
 
-/* search - Prints out information about package
- *
- * Flags:
- * -O Shows all owned files
- */
-
 #pragma once
 
 #include <filesystem>

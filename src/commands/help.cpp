@@ -16,7 +16,6 @@
 #include "help.hpp"
 
 #include <iostream>
-#include <ostream>
 
 #include "../colors.hpp"
 #include "../messages.hpp"
@@ -35,6 +34,7 @@ void c_help(const std::string &target)
 		print_msg(MSG_DOWN_INFO);
 		print_msg(MSG_INSTALL_INFO);
 		print_msg(MSG_LIST_INFO);
+		print_msg(MSG_OWN_INFO);
 		print_msg(MSG_REMOVE_INFO);
 		print_msg(MSG_SEARCH_INFO);
 		print_msg(MSG_UPDATE_INFO);
@@ -44,43 +44,43 @@ void c_help(const std::string &target)
 	{
 		print_msg(MSG_BUILD_INFO);
 
-		std::cout << CYAN_COL << " -C	 " << WHITE_COL << "Disabled checking dependencies\n";
-		std::cout << CYAN_COL << " -D	 " << WHITE_COL << "Do not download sources\n";
-		std::cout << CYAN_COL << " -F	 " << WHITE_COL << "Force redownloading sources even if they are already present\n";
+		std::cout << CYAN_COL << " -C     " << WHITE_COL << "Disabled checking dependencies\n";
+		std::cout << CYAN_COL << " -D     " << WHITE_COL << "Do not download sources\n";
+		std::cout << CYAN_COL << " -F     " << WHITE_COL << "Force redownloading sources even if they are already present\n";
 		std::cout << CYAN_COL << " -I ... " << WHITE_COL << "Do not install packages or if argument is given install them to this path\n";
-		std::cout << CYAN_COL << " -P	 " << WHITE_COL << "Show targets paths instead of names\n";
-		std::cout << CYAN_COL << " -R	 " << WHITE_COL << "Remove standard build params\n";
-		std::cout << CYAN_COL << " -S	 " << WHITE_COL << "Disable striping install binaries\n";
-		std::cout << CYAN_COL << " -U	 " << WHITE_COL << "Do not remove already unpacked/compiled source\n";
-		std::cout << CYAN_COL << " -V	 " << WHITE_COL << "Enables verbose output\n";
-		std::cout << CYAN_COL << " -Y	 " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
+		std::cout << CYAN_COL << " -P     " << WHITE_COL << "Show targets paths instead of names\n";
+		std::cout << CYAN_COL << " -R     " << WHITE_COL << "Remove standard build params\n";
+		std::cout << CYAN_COL << " -S     " << WHITE_COL << "Disable striping install binaries\n";
+		std::cout << CYAN_COL << " -U     " << WHITE_COL << "Do not remove already unpacked/compiled source\n";
+		std::cout << CYAN_COL << " -V     " << WHITE_COL << "Enables verbose output\n";
+		std::cout << CYAN_COL << " -Y     " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
 	}
-	else if (target == "clear")
+	else if (target == "clr")
 	{
 		print_msg(MSG_CLEAR_INFO);
 		std::cout << CYAN_COL << " -E ... " << WHITE_COL << "Exclude packages from clearing\n";
 		std::cout << CYAN_COL << " -I ... " << WHITE_COL << "Include packages to clearing\n";
-		std::cout << CYAN_COL << " -V	 " << WHITE_COL << "Enables verbose output\n";
-		std::cout << CYAN_COL << " -Y	 " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
+		std::cout << CYAN_COL << " -V     " << WHITE_COL << "Enables verbose output\n";
+		std::cout << CYAN_COL << " -Y     " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
 	}
-	else if (target == "download")
+	else if (target == "down")
 	{
 		print_msg(MSG_DOWN_INFO);
 		std::cout << CYAN_COL << " -F " << WHITE_COL << "Force redownloading sources even if they are already present\n";
 		std::cout << CYAN_COL << " -U " << WHITE_COL << "Do not remove already unpacked/compiled source\n";
 		std::cout << CYAN_COL << " -V " << WHITE_COL << "Enables verbose output\n";
 	}
-	else if (target == "install")
+	else if (target == "ins")
 	{
 		print_msg(MSG_INSTALL_INFO);
 		std::cout << CYAN_COL << " -I ... " << WHITE_COL << "Do not install packages or if argument is given install them to this path\n";
-		std::cout << CYAN_COL << " -V	 " << WHITE_COL << "Enables verbose output\n";
+		std::cout << CYAN_COL << " -V     " << WHITE_COL << "Enables verbose output\n";
 	}
 	else if (target == "list")
-	{
 		print_msg(MSG_LIST_INFO);
-	}
-	else if (target == "remove")
+	else if (target == "own")
+		print_msg(MSG_OWN_INFO);
+	else if (target == "rem")
 	{
 		print_msg(MSG_REMOVE_INFO);
 		std::cout << CYAN_COL << " -F " << WHITE_COL << "Disables dependents checking\n";
@@ -92,14 +92,14 @@ void c_help(const std::string &target)
 		print_msg(MSG_SEARCH_INFO);
 		std::cout << CYAN_COL << " -O " << WHITE_COL << "Shows all owned files\n";
 	}
-	else if (target == "update")
+	else if (target == "upd")
 	{
 		print_msg(MSG_UPDATE_INFO);
 		std::cout << CYAN_COL << " -S ... " << WHITE_COL << "Fetching sleep time in seconds\n";
-		std::cout << CYAN_COL << " -V	 " << WHITE_COL << "Enables verbose output\n";
-		std::cout << CYAN_COL << " -Y	 " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
+		std::cout << CYAN_COL << " -V     " << WHITE_COL << "Enables verbose output\n";
+		std::cout << CYAN_COL << " -Y     " << WHITE_COL << "Auto-yes, autoresponds yes to all messages (including continue prompts)\n";
 	}
-	else if (target == "version")
+	else if (target == "ver")
 	{
 		print_msg(MSG_VERSION_INFO);
 		std::cout << CYAN_COL << " -F " << WHITE_COL << "Do not fetch cross-pkg version\n";

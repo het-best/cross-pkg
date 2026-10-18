@@ -294,7 +294,6 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
 
 
 		// Checking if package has been installed
-		const std::optional<pkg_info> inst_info = get_pkg_info(INSTALL_PATH + target_name + "/config.crs", false);
 		std::chrono::time_point build_start = std::chrono::system_clock::now();
 
 
@@ -350,10 +349,6 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
 		if (!dont_install)
 			if (!c_install({ target_name }, tmp_args, true, std::make_pair(std::to_string(i + 1), std::to_string(target_infos.size()))))
 				return false;
-
-
-		// After install script
-		run_build("after-install", target_cache, target_infos[i].aft_install, build_params, autoyes);
 	}
 
 
@@ -401,7 +396,7 @@ std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_ta
 	if (target_path.empty())
 		return std::nullopt;
 
-	const std::optional<pkg_info> info = get_pkg_info(target_path);
+	std::optional<pkg_info> info = get_pkg_info(target_path);
 	if (!info.has_value())
 		return std::nullopt;
 
@@ -419,7 +414,7 @@ std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_ta
 			return std::nullopt;
 
 		const std::optional<pkg_info> depend_inst_info = get_pkg_info(INSTALL_PATH + depend + "/config.crs", false);
-		if (depend_inst_info.has_value() && cross_stov(depend_inst_info->version) >= cross_stov(depend_info->version))
+		if (depend_inst_info.has_value() && depend_inst_info->version >= depend_info->version)
 			continue;
 
 
@@ -428,8 +423,9 @@ std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_ta
 		if (!depends_depends.has_value())
 			return std::nullopt;
 
-		depends_info.insert(depends_info.end(), depends_depends.value().first.begin(), depends_depends.value().first.end());
-		depends_paths.insert(depends_paths.end(), depends_depends.value().second.begin(), depends_depends.value().second.end());
+
+		depends_info.insert(depends_info.end(), std::make_move_iterator(depends_depends->first.begin()), std::make_move_iterator(depends_depends->first.end()));
+		depends_paths.insert(depends_paths.end(), std::make_move_iterator(depends_depends->second.begin()), std::make_move_iterator(depends_depends->second.end()));
 	}
 
 	depends_info.push_back(info.value());
@@ -468,8 +464,7 @@ std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_ta
 		depends_paths.insert(depends_paths.end(), rebuild_depends_depends.value().second.begin(), rebuild_depends_depends.value().second.end());
 	}
 
-
-	return std::make_pair(depends_info, depends_paths);
+	return std::make_pair(std::move(depends_info), std::move(depends_paths));
 }
 
 bool run_build(const std::string& name, const std::string& target_cache, const std::string& build_src, bool build_params, bool& autoyes, const std::string args)
@@ -500,13 +495,18 @@ bool run_build(const std::string& name, const std::string& target_cache, const s
 		std::string input;
 		std::getline(std::cin, input);
 	
-		if (input == "n" || input == "N")
-			return false;
+		if (input == "y" || input == "Y")
+			goto building;
 		if (input == "yy" || input == "Yy" || input == "yY" || input == "YY")
+		{
 			autoyes = true;
+			goto building;
+		}
+
+		return false;
 	}
 
-
+building:
 	if (build_params)
 		return exec_cmd("chmod +x " + target_cache + name + " && (cd " + target_cache + "source && " + BUILD_ARGS + " ../" + name + " " + args + ")");
 	else

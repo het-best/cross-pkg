@@ -13,12 +13,6 @@
 	GNU General Public License for more details.
  */
 
-/* version - Print out information about cross version and fetches for updates
- *
- * Flags:
- * -F Do not fetch cross-pkg version
- */
-
 #pragma once
 
 #include <string>

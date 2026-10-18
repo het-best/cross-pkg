@@ -221,7 +221,7 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
 
 		if (!std::filesystem::exists(target_cache))
 			std::filesystem::create_directory(target_cache);
-		if (std::filesystem::exists(target_cache + "install") && std::filesystem::remove_all(target_cache + "install"))
+		if (std::filesystem::exists(target_cache + "install") && !std::filesystem::remove_all(target_cache + "install"))
 			return false;
 		std::filesystem::create_directory(target_cache + "install");
 
@@ -255,13 +255,17 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
 			if (prefix == SRC_URL)
 			{
 				// Checking
-				const bool is_archive = source_name.ends_with(".gz") || source_name.ends_with(".bz") || source_name.ends_with(".tar") || source_name.ends_with(".xz");
+				const bool is_archive = source_name.ends_with(".gz") || source_name.ends_with(".bz2") || source_name.ends_with(".tar") || source_name.ends_with(".xz");
 
-				if (std::filesystem::exists(target_cache + source_name) && !force_download &&
-					!(is_archive && !exec_cmd("tar -atf " + target_cache + source_name + " > /dev/null 2>&1")))
+				if (std::filesystem::exists(target_cache + source_name))
 				{
-					print_msg(MSG_PKG_ALR_DOWN, target_name, source);
-					continue;
+					if (!force_download && !(is_archive && !exec_cmd("tar -atf " + target_cache + source_name + " > /dev/null 2>&1")))
+					{
+						print_msg(MSG_PKG_ALR_DOWN, target_name, source);
+						continue;
+					}
+
+					std::filesystem::remove(target_cache + source_name);
 				}
 				
 				print_msg(MSG_PKG_DOWN_SRC, target_name, source);

@@ -18,8 +18,6 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-#include <cstdlib>
-#include <algorithm>
 #include <fstream>
 #include <iostream>
 
@@ -63,8 +61,8 @@ bool c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 	for (uint i = 0; i < targets.size(); i++)
 	{
 		const std::string& target_name = targets[i];
-		const std::string& target_path = INSTALL_PATH + target_name;
-		const std::string& rm_cmd = SU_CMD + " rm -f" + std::string((verbose) ? "v" : "");
+		const std::string& target_path = INSTALL_PATH + target_name + "/";
+		const std::string& rm_cmd = SU_CMD + " rm -f" + static_cast<std::string>((verbose) ? "v" : "");
 
 
 		if (!std::filesystem::exists(target_path))
@@ -83,7 +81,7 @@ bool c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 		{
 			print_msg(MSG_PKG_CHECK_DEL, target_name);
 
-			if (std::string depends_str = get_pkg_dependents(info.value()); depends_str != "")
+			if (std::string depends_str = get_pkg_dependents(info.value()); !depends_str.empty())
 			{
 				depends_str.erase(depends_str.length() - 2);
 				print_msg(MSG_PKG_HAS_DEPENDS, target_name, depends_str);
@@ -93,11 +91,12 @@ bool c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 
 
 		// Running before remove script
-		if (!run_build("before-remove", target_path, info->bef_remove, false, autoyes))
-		{
-			print_msg(MSG_PKG_NOT_REMOVED, target_name);
-			return false;
-		}
+		const std::string tmp_bef_rem = "/tmp/" + target_name;
+
+		std::filesystem::create_directory(tmp_bef_rem);
+		std::filesystem::create_directory(tmp_bef_rem + "/source");
+		run_build("before-remove", tmp_bef_rem + "/", info->bef_remove, false, autoyes);
+		std::filesystem::remove_all(tmp_bef_rem);
 
 
 		print_msg(MSG_PKG_REMOVING, target_name);
@@ -111,7 +110,20 @@ bool c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 		std::string line;
 		while(getline(file, line))
 		{
-			if (!exec_cmd(rm_cmd + " '" + line + "'"))
+			// Choosing to use rmdir if line is directory
+			std::string final_rm_cmd = rm_cmd;
+
+			if (std::filesystem::is_directory(line))
+			{
+				if (!std::filesystem::is_empty(line))
+					continue;
+				
+				final_rm_cmd = SU_CMD + " rmdir" + static_cast<std::string>((verbose) ? " -v" : "");
+			}
+
+
+			// Removing file/directory
+			if (!exec_cmd(final_rm_cmd  + " '" + line + "'"))
 			{
 				print_msg(MSG_PKG_NOT_REMOVED, target_name);
 				return false;
@@ -129,7 +141,7 @@ bool c_remove(const std::vector<std::string> &targets, const std::vector<std::pa
 
 
 		// Running after remove script
-		run_build("after-remove", target_path, info->aft_remove, false, autoyes);
+		run_build("after-remove", "/tmp/" + target_name + "/", info->aft_remove, false, autoyes);
 	}
 
 

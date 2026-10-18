@@ -91,9 +91,7 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
 
 	// Dependencies
 	if (info->depends.empty())
-	{
 		std::cout << PREFIX << "Package dependencies: " << CYAN_COL << "None" << WHITE_COL << "\n";
-	}
 	else
 	{
 		std::cout << PREFIX << "Package dependencies: " << CYAN_COL;
@@ -144,11 +142,11 @@ void c_search(const std::string &target, const std::vector<std::pair<char, std::
 
 	while(getline(man_file, line))
 	{
-		if (!std::filesystem::exists(line))
+		if (!std::filesystem::exists(line) || std::filesystem::is_directory(line))
 			continue;
 
 		if (all_owned || i <= 5)
-			final_str += line + ", ";
+			final_str += line + ",\n";
 		else
 			cutted = true;
 
@@ -190,10 +188,13 @@ std::string get_target_path(const std::string& target)
 
 		if (std::filesystem::exists(path / (target + ".crs")))
 			return path / (target + ".crs");
+		
+		if (target.find(".crs") != std::string::npos && std::filesystem::exists(path / target))
+			return path / target;
 	}
 
 	print_msg(MSG_PKG_NOT_FOUND, target);
-	return "";
+	return target;
 }
 
 std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, bool print_log)
@@ -201,12 +202,10 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
 	std::string target_name = target_path.filename().string();
 
 	if (target_name.find('.') == std::string::npos)
-	{
-		if (print_log)
-			print_msg(MSG_PKG_CONF_NO_EXT, target_name);
 		return std::nullopt;
-	}
+	
 	target_name.erase(target_name.find_last_of('.'));
+	
 	if (target_name == "config")
 		target_name = target_path.parent_path().filename().string();
 
@@ -350,7 +349,7 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
 				if (line.front() != '#')
 				{
 					if (old_line == "-depends-")
-						info.depends.push_back(line);
+						info.depends.push_back(split(line, " ").front());
 					else if (old_line == "-group-")
 						info.groups.push_back(line);
 				}
@@ -359,7 +358,7 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
 		}
 		else if (line == "-build-" || line == "-after-install-" || line == "-before-remove-" || line == "-after-remove-")
 		{
-			// So that 3 if statements can be reduced to one
+			// So that X if statements can be reduced to one
 			std::string* build_str = nullptr;
 
 			if (line == "-build-")
@@ -403,12 +402,17 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
 
 std::string get_pkg_dependents(const pkg_info& target)
 {
-	std::string depends_str = "";
+	std::string depends_str;
 
 	for (const std::filesystem::path path : std::filesystem::directory_iterator(INSTALL_PATH))
 	{
-		if (std::ranges::find(target.depends, target.name) != target.depends.end())
-			depends_str += target.name + ", ";
+		std::optional<pkg_info> dep_info = get_pkg_info(path / "config.crs");
+
+		if (!dep_info.has_value() || dep_info->depends.empty())
+			continue;
+		
+		if (std::find(dep_info->depends.begin(), dep_info->depends.end(), target.name) != dep_info->depends.end())
+			depends_str += dep_info->name + ", ";
 	}
 
 	return depends_str;

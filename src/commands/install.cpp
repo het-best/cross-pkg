@@ -22,6 +22,8 @@
 #include <string>
 #include <vector>
 
+#include "build.hpp"
+#include "search.hpp"
 #include "../cmd.hpp"
 #include "../messages.hpp"
 
@@ -31,6 +33,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 	std::pair<std::string, std::string> number)
 {
 	// Checking flags
+	bool autoyes = false;
 	bool verbose = false;
 	std::string install_path = "";
 
@@ -38,6 +41,10 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 	{
 		switch (flag)
 		{
+			case 'y':
+				autoyes = true;
+				std::cout << FLAG_PREFIX << "Autoyes is enabled" << WHITE_COL << "\n";
+				break;
 			case 'i':
 				if (arg.empty())
 					print_msg(MSG_NO_FLAG_ARG, std::string(1, flag));
@@ -103,35 +110,96 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 			print_msg(MSG_PKG_NO_TO_INST);
 			continue;
 		}
+	
 
+		std::optional<pkg_info> info = get_pkg_info(get_target_path(target_name));
+		if (!info.has_value())
+			continue;
 
-		// Removing package files
-		if (verbose)
-			print_msg(MSGV_PKG_REM_FILES, target_name);
-
-		std::ifstream man_file(target_cache + "manifest");
-		std::ifstream inst_man_file(target_ins_path + "manifest");
 		
-		std::stringstream buffer;
-		buffer << man_file.rdbuf();
-		
-		if (man_file.is_open() && inst_man_file.is_open())
+		// Checking for alternatives
+		std::unordered_set<std::string> excluded_files;
+
+		for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
 		{
-			std::string line;
+			if (is_directory(entry))
+				continue;
 
-			while(getline(inst_man_file, line))
+			const std::string full_path = entry.string();
+			const std::string relative_path = std::filesystem::path(install_path + std::string(full_path.begin() + (target_cache + "install").length(), full_path.end())).remove_filename().string();
+			
+			
+			// Reading installed manifests
+			for (const std::filesystem::path inst_entry : std::filesystem::directory_iterator(INSTALL_PATH))
 			{
-				if (buffer.str().find(line) == std::string::npos)
+				const std::string package_name = inst_entry.filename().string();
+				if (!std::filesystem::exists(inst_entry / "manifest") || package_name == target_name)
+					continue;
+
+				
+				// Reading manifest file
+				std::ifstream man_file(inst_entry / "manifest");
+				
+				std::stringstream buffer;
+				buffer << man_file.rdbuf();
+				
+				man_file.close();
+				
+	
+				// Checking if file is owned by somebody
+				if (buffer.str().find(relative_path + entry.filename().string()) == std::string::npos)
+					continue;
+
+
+				// Checking alternatives
+				std::filesystem::create_directories(ALT_PATH + relative_path);
+				const std::string alt_path = ALT_PATH + relative_path + entry.filename().string();
+				
+				if (std::filesystem::exists(alt_path))
 				{
-					if (verbose)
-						exec_cmd(SU_CMD + " rm -v " + install_path + line);
-					else
-						exec_cmd(SU_CMD + " rm " + install_path + line);
+					std::ifstream alt_file(alt_path);
+
+					std::string line;
+					getline(alt_file, line);
+
+					alt_file.close();
+
+					if (line == target_name)
+						continue;
 				}
+
+
+				// Asking user if he wants to replace file
+				std::ofstream alt_file(alt_path);
+
+				if (autoyes)
+				{
+					alt_file << target_name << "\n";
+					alt_file.close();
+					continue;
+				}
+	
+				print_msg(MSG_PKG_ALT_REPLACE, relative_path + entry.filename().string(), package_name);
+				print_msg(MSG_PKG_ALT_REPLACE_QW);
+	
+				std::string input;
+				std::getline(std::cin, input);
+	
+				if (input == "n" || input == "N")
+				{
+					excluded_files.insert(relative_path + entry.filename().string());
+					alt_file << package_name << "\n";
+					break;
+				}
+
+				if (input == "yy" || input == "Yy" || input == "yY" || input == "YY")
+					autoyes = true;
+				
+				alt_file << target_name << "\n";
+				alt_file.close();
+				break;
 			}
 		}
-		man_file.close();
-		inst_man_file.close();
 
 
 		// Creating manifest
@@ -144,9 +212,6 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 
 		for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
 		{
-			if (is_directory(entry))
-				continue;
-
 			const std::string full_path = entry.string();
 			const std::string relative_path(full_path.begin() + std::string(target_cache + "install").length(), full_path.end());
 			file << relative_path << "\n";
@@ -157,19 +222,30 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 		file.close();
 
 
-		// Installing to INSTALL_PATH
+		// Removing old package files
 		if (verbose)
-			print_msg(MSGV_PKG_INST_FILES, target_name);
+			print_msg(MSGV_PKG_REM_FILES, target_name);
 
-		if (std::filesystem::exists(target_ins_path))
-			exec_cmd(SU_CMD + " rm -rf " + target_ins_path);
+		std::ifstream man_file(target_cache + "manifest");
+		std::ifstream inst_man_file(target_ins_path + "manifest");
+		
+		if (man_file.is_open() && inst_man_file.is_open())
+		{
+			std::string line;
 
-		if (!std::filesystem::exists(target_ins_path))
-			exec_cmd(SU_CMD + " mkdir " + target_ins_path);
+			std::stringstream buffer;
+			buffer << man_file.rdbuf();
 
-		exec_cmd(SU_CMD + " cp " + target_cache + target_name + ".crs " + target_ins_path + "config.crs");
-		exec_cmd(SU_CMD + " cp " + target_cache  + "manifest " + target_ins_path);
-		exec_cmd(SU_CMD + " chmod -R 755 " + target_ins_path);
+			const std::string buffer_str = buffer.str();
+
+			while(getline(inst_man_file, line))
+			{
+				if (buffer_str.find(line) == std::string::npos)
+					exec_cmd(SU_CMD + " rm" + (verbose ? " -v " : " " ) + install_path + line);
+			}
+		}
+		man_file.close();
+		inst_man_file.close();
 
 
 		// Checking for already existing config files in /etc
@@ -179,9 +255,80 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 				std::filesystem::remove_all(target_cache + "tmp");
 			std::filesystem::create_directory(target_cache + "tmp");
 
-			exec_cmd("(cd " + target_cache + "install/etc && find . -type f -exec sh -c 'if [ -e \"" + install_path + "/etc/$1\" ]; then mkdir -p \"" + target_cache +
-				"tmp/$(dirname \"$1\")\" && mv -v \"" + target_cache + "install/etc/$1\" \"" + target_cache + "tmp/$1\"; fi' _ {} \\;) 2>/dev/null");
+			
+			// Checking files
+			const std::string install_etc = target_cache + "install/etc";
+
+			for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(install_etc))
+			{
+				const std::string full_path = entry.string();
+				std::string relative_path = std::filesystem::path(install_path + std::string(full_path.begin() + install_etc.length(), full_path.end())).remove_filename().string();
+				if (std::filesystem::is_directory(entry))
+					continue;
+
+
+				// Checking if file already exists
+				const std::string target_tmp = target_cache + "tmp" + relative_path;
+
+				if (!std::filesystem::exists(install_path + "/etc" + relative_path + entry.filename().string()))
+					continue;
+
+
+				// Moving existing file
+				if (std::filesystem::exists(target_cache + "install/CROSS_ETC_OVERWRITE"))
+				{
+					print_msg(MSG_PKG_ETC_REPLACE, "/etc" + relative_path + entry.filename().string());
+					print_msg(MSG_PKG_ALT_REPLACE_QW);
+		
+					std::string input;
+					std::getline(std::cin, input);
+					
+					if (input == "n" || input == "N")
+						goto move_etc_to_tmp;
+	
+					if (input == "yy" || input == "Yy" || input == "yY" || input == "YY")
+						autoyes = true;
+
+
+					// Determening if file is not already owned by target package
+					const std::string overwrite_path = target_ins_path + "overwrite/etc" + relative_path;
+
+					std::stringstream buffer;
+					if (std::filesystem::exists(target_ins_path + "manifest"))
+					{
+						std::ifstream man_file(target_ins_path + "manifest");
+						buffer << man_file.rdbuf();
+						man_file.close();
+					}
+
+					if (!std::filesystem::exists(overwrite_path + entry.filename().string()) || buffer.str().find("/etc" + relative_path + entry.filename().string()) == std::string::npos)
+					{
+						exec_cmd(SU_CMD + " mkdir -p " + overwrite_path);
+						exec_cmd(SU_CMD + " cp " + install_path + "/etc" + relative_path + entry.filename().string() + " " + overwrite_path + "/");
+					}
+
+					continue;
+				}
+move_etc_to_tmp:
+				
+				std::filesystem::create_directories(target_tmp);
+				std::filesystem::rename(full_path, target_tmp + entry.filename().string());
+			}
 		}
+
+
+		// Installing to INSTALL_PATH
+		if (verbose)
+			print_msg(MSGV_PKG_INST_FILES, target_name);
+
+		if (!std::filesystem::exists(target_ins_path))
+			exec_cmd(SU_CMD + " mkdir " + target_ins_path);
+		else
+			exec_cmd(SU_CMD + " rm " + target_ins_path + "config.crs " + target_ins_path + "manifest");
+
+		exec_cmd(SU_CMD + " cp " + target_cache + target_name + ".crs " + target_ins_path + "config.crs");
+		exec_cmd(SU_CMD + " cp " + target_cache  + "manifest " + target_ins_path);
+		exec_cmd(SU_CMD + " chmod -R 755 " + target_ins_path);
 
 
 		// Copying files
@@ -193,7 +340,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 			std::string relative_path = std::filesystem::path(install_path + std::string(full_path.begin() + std::string(target_cache + "install").length(), full_path.end())).remove_filename().string();
 			relative_path.erase(relative_path.length() - 1);
 
-			if (!is_symlink(std::filesystem::path(relative_path)))
+			if (!is_symlink(std::filesystem::path(relative_path)) || excluded_files.contains(relative_path))
 				continue;
 
 			while (is_symlink(std::filesystem::path(relative_path)))
@@ -207,18 +354,31 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 			exec_cmd(cp_cmd + full_path + " " + relative_path + "/");
 		}
 
-		exec_cmd(cp_cmd + target_cache + "install/* " + install_path + "/");
+		exec_cmd(cp_cmd + target_cache + "install/* " + install_path + "/ 2>/dev/null");
 
 		if (std::filesystem::exists(target_cache + "tmp"))
 		{
-			std::filesystem::copy(target_cache + "tmp", target_cache + "/install/etc", std::filesystem::copy_options::overwrite_existing);
+			std::filesystem::copy(target_cache + "tmp", target_cache + "/install/etc", std::filesystem::copy_options::overwrite_existing | std::filesystem::copy_options::recursive);
 			std::filesystem::remove_all(target_cache + "tmp");
 		}
+
 
 		if (number.first.empty())
 			print_msg(MSG_PKG_INSTALLED, target_name, std::to_string(i + 1) + "/" + std::to_string(targets.size()));
 		else
 			print_msg(MSG_PKG_INSTALLED, target_name, number.first + "/" + number.second);
+
+
+		// Compiling glib schemas
+		if (std::filesystem::exists(target_cache + "install/usr/share/glib-2.0/schemas") || std::filesystem::exists(target_cache + "install/share/glib-2.0/schemas"))
+		{
+			print_msg(MSG_PKG_GLIB_COMPILE, target_name);
+			exec_cmd(SU_CMD + " glib-compile-schemas /usr/share/glib-2.0/schemas/");
+		}
+
+
+		// After install script
+		run_build("after-install", target_cache, info->aft_install, false, autoyes);
 	}
 
 

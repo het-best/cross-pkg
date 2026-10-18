@@ -13,15 +13,6 @@
 	GNU General Public License for more details.
  */
 
-/* clear - Clears cache
- *
- * Flags:
- * -Y	 Auto-yes, autoresponds yes to all messages (including continue prompts)
- * -E ... Exclude packages from clearing
- * -I ... Include packages to clearing
- * -V	 Enables verbose output
- */
-
 #pragma once
 
 #include <string>
