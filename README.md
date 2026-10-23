@@ -56,7 +56,7 @@ Also git+ prefix can have @ symbol with commit has after it to checkout to requi
 ### -depends-
 `Optional` Package dependencies, one package per line
 
-### -group-
+### -groups-
 `Optional` Package groups, very specific use cases and do not do anything yet
 
 ### -build-
@@ -82,7 +82,7 @@ Example package script
 	-depends-
 		cmake
 		gcc
-    -group-
+    -groups-
 		pkg
 	-build-
 		cmake -S . -B build \

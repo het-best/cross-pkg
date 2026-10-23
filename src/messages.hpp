@@ -43,11 +43,12 @@ enum msg_type
 	MSG_PKG_BUILD_FAIL = 114,
 	MSG_BUILD_SUC = 115,
 	MSG_EXEC_SCR = 116,
+	MSG_NO_TARGETS = 117,
 
-	MSGV_GET_IMP_TARGETS = 117,
-	MSGV_BUILD_ARGS = 118,
-	MSGV_BUILD_STRIP = 119,
-	MSGV_TIMES_WRITE = 120,
+	MSGV_GET_IMP_TARGETS = 118,
+	MSGV_BUILD_ARGS = 119,
+	MSGV_BUILD_STRIP = 120,
+	MSGV_TIMES_WRITE = 121,
 
 	// 200 - 299 Clear
 	MSG_CLEAR_ABORTING = 200,
@@ -172,6 +173,7 @@ inline const std::array build_msgs =
 	PKG_PREFIX + "Package building failed :[\n",
 	PREFIX + "Packages were built successfully :D\n",
 	PREFIX + MAG_COL + "Do you want to run this build file? " + CYAN_COL + "[y/yy/N]" + WHITE_COL + ": ",
+	PKG_PREFIX + "Groups does not contain any packages\n",
 
 	PREFIX + "Getting implicit targets\n",
 	PKG_PREFIX + "Build arguments: " + CYAN_COL + "{ARG2}" + WHITE_COL + "\n",

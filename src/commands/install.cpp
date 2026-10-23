@@ -21,6 +21,8 @@
 #include <ranges>
 #include <string>
 #include <vector>
+#include <unordered_map>
+#include <unordered_set>
 
 #include "build.hpp"
 #include "search.hpp"
@@ -117,10 +119,38 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 			continue;
 
 		
+		// Reading installed manifests
+		std::unordered_map<std::string, std::string> packages_index;
+
+		for (const std::filesystem::path& inst_entry : std::filesystem::directory_iterator(INSTALL_PATH))
+		{
+			const std::string package_name = inst_entry.filename().string();
+			if (!std::filesystem::exists(inst_entry / "manifest") || package_name == target_name)
+				continue;
+
+			
+			// Checking index
+			if (packages_index.find(package_name) == packages_index.end())
+			{
+				// Reading manifest file
+				std::ifstream man_file(inst_entry / "manifest");
+				if (!man_file)
+        			continue;
+				
+				std::string line;
+				while (getline(man_file, line))
+				{
+					packages_index.insert({line, package_name});
+				}
+				man_file.close();
+			}
+		}
+
+
 		// Checking for alternatives
 		std::unordered_set<std::string> excluded_files;
 
-		for (const std::filesystem::path entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
+		for (const std::filesystem::path& entry : std::filesystem::recursive_directory_iterator(target_cache + "install"))
 		{
 			if (is_directory(entry))
 				continue;
@@ -128,78 +158,61 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 			const std::string full_path = entry.string();
 			const std::string relative_path = std::filesystem::path(install_path + std::string(full_path.begin() + (target_cache + "install").length(), full_path.end())).remove_filename().string();
 			
+
+			// Checking if file is owned by somebody
+			auto package_index = packages_index.find(relative_path + entry.filename().string());
+			if (package_index == packages_index.end())
+				continue;
+
+
+			// Checking alternatives
+			std::filesystem::create_directories(ALT_PATH + relative_path);
+			const std::string alt_path = ALT_PATH + relative_path + entry.filename().string();
 			
-			// Reading installed manifests
-			for (const std::filesystem::path inst_entry : std::filesystem::directory_iterator(INSTALL_PATH))
+			if (std::filesystem::exists(alt_path))
 			{
-				const std::string package_name = inst_entry.filename().string();
-				if (!std::filesystem::exists(inst_entry / "manifest") || package_name == target_name)
+				std::ifstream alt_file(alt_path);
+
+				std::string line;
+				getline(alt_file, line);
+
+				alt_file.close();
+
+				if (line == target_name)
 					continue;
-
-				
-				// Reading manifest file
-				std::ifstream man_file(inst_entry / "manifest");
-				
-				std::stringstream buffer;
-				buffer << man_file.rdbuf();
-				
-				man_file.close();
-				
-	
-				// Checking if file is owned by somebody
-				if (buffer.str().find(relative_path + entry.filename().string()) == std::string::npos)
-					continue;
+			}
 
 
-				// Checking alternatives
-				std::filesystem::create_directories(ALT_PATH + relative_path);
-				const std::string alt_path = ALT_PATH + relative_path + entry.filename().string();
-				
-				if (std::filesystem::exists(alt_path))
-				{
-					std::ifstream alt_file(alt_path);
-
-					std::string line;
-					getline(alt_file, line);
-
-					alt_file.close();
-
-					if (line == target_name)
-						continue;
-				}
-
-
-				// Asking user if he wants to replace file
-				std::ofstream alt_file(alt_path);
-
-				if (autoyes)
-				{
-					alt_file << target_name << "\n";
-					alt_file.close();
-					continue;
-				}
-	
-				print_msg(MSG_PKG_ALT_REPLACE, relative_path + entry.filename().string(), package_name);
-				print_msg(MSG_PKG_ALT_REPLACE_QW);
-	
-				std::string input;
-				std::getline(std::cin, input);
-	
-				if (input == "n" || input == "N")
-				{
-					excluded_files.insert(relative_path + entry.filename().string());
-					alt_file << package_name << "\n";
-					break;
-				}
-
-				if (input == "yy" || input == "Yy" || input == "yY" || input == "YY")
-					autoyes = true;
-				
+			// Asking user if he wants to replace file
+			std::ofstream alt_file(alt_path);
+			if (autoyes)
+			{
 				alt_file << target_name << "\n";
 				alt_file.close();
+				continue;
+			}
+
+			print_msg(MSG_PKG_ALT_REPLACE, relative_path + entry.filename().string(), package_index->first);
+			print_msg(MSG_PKG_ALT_REPLACE_QW);
+
+			std::string input;
+			std::getline(std::cin, input);
+
+			if (input == "n" || input == "N")
+			{
+				excluded_files.insert(relative_path + entry.filename().string());
+				alt_file << package_index->first << "\n";
 				break;
 			}
+
+			if (input == "yy" || input == "Yy" || input == "yY" || input == "YY")
+				autoyes = true;
+			
+			alt_file << target_name << "\n";
+			alt_file.close();
+			break;
 		}
+		packages_index.clear();
 
 
 		// Creating manifest
@@ -214,6 +227,10 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 		{
 			const std::string full_path = entry.string();
 			const std::string relative_path(full_path.begin() + std::string(target_cache + "install").length(), full_path.end());
+			
+			if (full_path.find("DONT_STRIP") != std::string::npos)
+				continue;
+
 			file << relative_path << "\n";
 
 			if (verbose)
@@ -355,6 +372,8 @@ move_etc_to_tmp:
 		}
 
 		exec_cmd(cp_cmd + target_cache + "install/* " + install_path + "/ 2>/dev/null");
+		if (std::filesystem::exists("/DONT_STRIP") || std::filesystem::exists("/CROSS_ETC_OVERWRITE"))
+			exec_cmd(SU_CMD + " rm -rf /DONT_STRIP /CROSS_ETC_OVERWRITE 2>/dev/null");
 
 		if (std::filesystem::exists(target_cache + "tmp"))
 		{

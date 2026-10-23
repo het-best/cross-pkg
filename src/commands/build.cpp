@@ -39,12 +39,14 @@
 bool c_build(const std::vector<std::string> &targets, const std::vector<std::pair<char, std::string>> &flags)
 {
 	// Checking flags
+	bool always_build_all = false;
 	bool always_show_paths = false;
 	bool autoyes = false;
 	bool build_params = true;
 	bool depends_disable = false;
 	bool dont_install = false;
 	bool force_download = false;
+	bool group_build = false;
 	bool preserve_src = false;
 	bool skip_download = false;
 	bool skip_strip = false;
@@ -56,6 +58,10 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
 	{
 		switch (flag)
 		{
+			case 'a':
+				always_build_all = true;
+				std::cout << FLAG_PREFIX << "Build all dependencies in enabled" << WHITE_COL << "\n";
+				break;
 			case 'p':
 				always_show_paths = true;
 				std::cout << FLAG_PREFIX << "Always showing paths is enabled" << WHITE_COL << "\n";
@@ -100,6 +106,10 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
 				force_download = true;
 				std::cout << FLAG_PREFIX << "Force source download is enabled" << WHITE_COL << "\n";
 				break;
+			case 'g':
+				group_build = true;
+				std::cout << FLAG_PREFIX << "Targets are searched as groups" << WHITE_COL << "\n";
+				break;
 			case 'u':
 				preserve_src = true;
 				std::cout << FLAG_PREFIX << "Source preservation is enabled" << WHITE_COL << "\n";
@@ -134,14 +144,39 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
 	std::string exp_targets_str;
 	std::string imp_targets_str;
 
-	for (const std::string& target : targets)
+
+	// If we searching for groups
+	std::vector<std::string> search_targets;
+
+	if (group_build)
+	{
+		for (const std::string& target : targets)
+		{
+			const std::vector<std::string> group_targets = get_target_group(target);
+
+			if (!group_targets.empty())
+				search_targets.insert(search_targets.end(), group_targets.begin(), group_targets.end());
+			
+			exp_targets_str += target + ", ";
+		}
+
+		if (search_targets.empty())
+		{
+			print_msg(MSG_NO_TARGETS);
+			return false;
+		}
+	}
+	else
+		search_targets = targets;
+
+	for (const std::string& target : search_targets)
 	{
 		if (!depends_disable)
 		{
 			// Getting all dependencies names and paths of current target
 			auto names_view = target_infos | std::views::transform(&pkg_info::name);
 			std::unordered_set depends_set(names_view.begin(), names_view.end());
-			std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> depends = get_target_depends(target, depends_set);
+			std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> depends = get_target_depends(target, depends_set, always_build_all);
 
 			if (!depends.has_value())
 				return false;
@@ -165,10 +200,13 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
 			target_infos.push_back(info.value());
 		}
 
-		if (always_show_paths)
-			exp_targets_str += get_target_path(target) + ", ";
-		else
-			exp_targets_str += target + ", ";
+		if (!group_build)
+		{
+			if (always_show_paths)
+				exp_targets_str += get_target_path(target) + ", ";
+			else
+				exp_targets_str += target + ", ";
+		}
 	}
 
 
@@ -311,7 +349,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
 
 
 		// Striping binaries
-		if (!skip_strip)
+		if (!skip_strip && !std::filesystem::exists(target_cache + "install/DONT_STRIP"))
 		{
 			if (verbose)
 				print_msg(MSGV_BUILD_STRIP);
@@ -380,7 +418,7 @@ bool c_build(const std::vector<std::string> &targets, const std::vector<std::pai
 	return true;
 }
 
-std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_target_depends(const std::string &target, std::unordered_set<std::string>& prev_depends)
+std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_target_depends(const std::string &target, std::unordered_set<std::string>& prev_depends, const bool build_all)
 {
 	std::vector<pkg_info> depends_info;
 	std::vector<std::string> depends_paths;
@@ -413,13 +451,18 @@ std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_ta
 		if (!depend_info.has_value())
 			return std::nullopt;
 
-		const std::optional<pkg_info> depend_inst_info = get_pkg_info(INSTALL_PATH + depend + "/config.crs", false);
-		if (depend_inst_info.has_value() && depend_inst_info->version >= depend_info->version)
-			continue;
+
+		// Checking if package already installed or needs to be upgraded
+		if (!build_all)
+		{
+			const std::optional<pkg_info> depend_inst_info = get_pkg_info(INSTALL_PATH + depend + "/config.crs", false);
+			if (depend_inst_info.has_value() && depend_inst_info->version >= depend_info->version)
+				continue;
+		}
 
 
 		// Recursion
-		const std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> depends_depends = get_target_depends(depend, prev_depends);
+		const std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> depends_depends = get_target_depends(depend, prev_depends, build_all);
 		if (!depends_depends.has_value())
 			return std::nullopt;
 
@@ -430,39 +473,6 @@ std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_ta
 
 	depends_info.push_back(info.value());
 	depends_paths.push_back(target_path);
-
-
-	// Rebuild dependencies
-	for (const std::string& rebuild_depend : info.value().rebuild_depends)
-	{
-		if (prev_depends.contains(rebuild_depend))
-			continue;
-
-		
-		// Skip if it is not installed
-		const std::optional<pkg_info> rebuild_inst_info = get_pkg_info(INSTALL_PATH + rebuild_depend + "/config.crs", false);
-		if (!rebuild_inst_info.has_value())
-			continue;
-
-
-		// Getting package info
-		const std::string rebuild_path = get_target_path(rebuild_depend);
-		if (rebuild_path.empty())
-			return std::nullopt;
-
-		const std::optional<pkg_info> rebuild_info = get_pkg_info(rebuild_path);
-		if (!rebuild_info.has_value())
-			return std::nullopt;
-
-
-		// Inserting package to queue
-		const std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> rebuild_depends_depends = get_target_depends(rebuild_depend, prev_depends);
-		if (!rebuild_depends_depends.has_value())
-			return std::nullopt;
-
-		depends_info.insert(depends_info.end(), rebuild_depends_depends.value().first.begin(), rebuild_depends_depends.value().first.end());
-		depends_paths.insert(depends_paths.end(), rebuild_depends_depends.value().second.begin(), rebuild_depends_depends.value().second.end());
-	}
 
 	return std::make_pair(std::move(depends_info), std::move(depends_paths));
 }

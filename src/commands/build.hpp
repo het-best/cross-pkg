@@ -24,6 +24,6 @@
 
 
 bool c_build(const std::vector<std::string> &targets, const std::vector<std::pair<char, std::string>> &flags);
-std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_target_depends(const std::string &target, std::unordered_set<std::string>& prev_depends);
+std::optional<std::pair<std::vector<pkg_info>, std::vector<std::string>>> get_target_depends(const std::string &target, std::unordered_set<std::string>& prev_depends, const bool build_all);
 
 bool run_build(const std::string& name, const std::string& target_cache, const std::string& build_src, bool build_params, bool& autoyes, const std::string args = "");

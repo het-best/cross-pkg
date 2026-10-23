@@ -188,13 +188,30 @@ std::string get_target_path(const std::string& target)
 
 		if (std::filesystem::exists(path / (target + ".crs")))
 			return path / (target + ".crs");
-		
-		if (target.find(".crs") != std::string::npos && std::filesystem::exists(path / target))
-			return path / target;
 	}
 
 	print_msg(MSG_PKG_NOT_FOUND, target);
 	return target;
+}
+
+std::vector<std::string> get_target_group(const std::string& target)
+{
+	// Searching
+	std::vector<std::string> targets;
+
+	for (std::filesystem::path path : std::filesystem::recursive_directory_iterator("/usr/repos/"))
+	{
+		if (is_directory(path))
+			continue;
+
+		const std::optional<pkg_info> info = get_pkg_info(path, false);
+		if (!info.has_value() || std::find(info->groups.begin(), info->groups.end(), target) == info->groups.end())
+			continue;
+		
+		targets.push_back(info->name);
+	}
+
+	return targets;
 }
 
 std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, bool print_log)
@@ -331,7 +348,7 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
 			}
 			i--;
 		}
-		else if (line == "-depends-" || line == "-group-")
+		else if (line == "-depends-" || line == "-groups-")
 		{
 			std::string old_line = line;
 
@@ -350,7 +367,7 @@ std::optional<pkg_info> get_pkg_info(const std::filesystem::path &target_path, b
 				{
 					if (old_line == "-depends-")
 						info.depends.push_back(split(line, " ").front());
-					else if (old_line == "-group-")
+					else if (old_line == "-groups-")
 						info.groups.push_back(line);
 				}
 			}

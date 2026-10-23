@@ -44,9 +44,11 @@ void c_help(const std::string &target)
 	{
 		print_msg(MSG_BUILD_INFO);
 
+		std::cout << CYAN_COL << " -A     " << WHITE_COL << "Building all dependencies even if installed\n";
 		std::cout << CYAN_COL << " -C     " << WHITE_COL << "Disabled checking dependencies\n";
 		std::cout << CYAN_COL << " -D     " << WHITE_COL << "Do not download sources\n";
 		std::cout << CYAN_COL << " -F     " << WHITE_COL << "Force redownloading sources even if they are already present\n";
+		std::cout << CYAN_COL << " -G     " << WHITE_COL << "Treat targets as groups to build\n";
 		std::cout << CYAN_COL << " -I ... " << WHITE_COL << "Do not install packages or if argument is given install them to this path\n";
 		std::cout << CYAN_COL << " -P     " << WHITE_COL << "Show targets paths instead of names\n";
 		std::cout << CYAN_COL << " -R     " << WHITE_COL << "Remove standard build params\n";
