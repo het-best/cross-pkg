@@ -221,8 +221,20 @@ bool c_download(const std::vector<std::string> &targets, const std::vector<std::
 
 		if (!std::filesystem::exists(target_cache))
 			std::filesystem::create_directory(target_cache);
-		if (std::filesystem::exists(target_cache + "install") && !std::filesystem::remove_all(target_cache + "install"))
-			return false;
+		
+		if (std::filesystem::exists(target_cache + "install"))
+		{
+			try
+			{
+				std::filesystem::remove_all(target_cache + "install");
+			}
+			catch (...)
+			{
+				exec_cmd(SU_CMD + " rm -rf " + target_cache + "install");
+				exec_cmd(SU_CMD + " chmod -R 775 " + target_cache);
+				exec_cmd(SU_CMD + " chown -R $(whoami):$(whoami) " + target_cache);
+			}
+		}
 		std::filesystem::create_directory(target_cache + "install");
 
 		std::filesystem::copy(target_path, target_cache, std::filesystem::copy_options::overwrite_existing);

@@ -116,9 +116,19 @@ bool c_clear(const std::vector<std::pair<char, std::string>> &flags)
 
 
 	// Deleting
-	for (std::string pkg : include_pkgs)
+	try
 	{
-		std::filesystem::remove_all(CACHE_PATH + pkg);
+		for (std::string pkg : include_pkgs)
+		{
+			std::filesystem::remove_all(CACHE_PATH + pkg);
+		}
+	}
+	catch (...)
+	{
+		for (std::string pkg : include_pkgs)
+		{
+			exec_cmd(SU_CMD + " rm -rf " + CACHE_PATH + pkg);
+		}
 	}
 
 	print_msg(MSG_CACHE_CLEARED);

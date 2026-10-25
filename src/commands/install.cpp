@@ -66,9 +66,6 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 						continue;
 					}
 
-					if (arg.back() == '/')
-						install_path = std::string(arg.begin(), arg.end() - 1);
-
 					if (!hide_flags_msg)
 						std::cout << FLAG_PREFIX << "Packages will be installed to: " << BLUE_COL << arg << WHITE_COL << "\n";
 				}
@@ -125,7 +122,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 		for (const std::filesystem::path& inst_entry : std::filesystem::directory_iterator(INSTALL_PATH))
 		{
 			const std::string package_name = inst_entry.filename().string();
-			if (!std::filesystem::exists(inst_entry / "manifest") || package_name == target_name)
+			if (package_name == target_name)
 				continue;
 
 			
@@ -169,18 +166,15 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 			std::filesystem::create_directories(ALT_PATH + relative_path);
 			const std::string alt_path = ALT_PATH + relative_path + entry.filename().string();
 			
-			if (std::filesystem::exists(alt_path))
-			{
-				std::ifstream alt_file(alt_path);
+			std::ifstream if_alt_file(alt_path);
 
-				std::string line;
-				getline(alt_file, line);
+			std::string line;
+			getline(if_alt_file, line);
 
-				alt_file.close();
+			if_alt_file.close();
 
-				if (line == target_name)
-					continue;
-			}
+			if (line == target_name)
+				continue;
 
 
 			// Asking user if he wants to replace file
@@ -192,7 +186,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 				continue;
 			}
 
-			print_msg(MSG_PKG_ALT_REPLACE, relative_path + entry.filename().string(), package_index->first);
+			print_msg(MSG_PKG_ALT_REPLACE, relative_path + entry.filename().string(), package_index->second);
 			print_msg(MSG_PKG_ALT_REPLACE_QW);
 
 			std::string input;
@@ -201,7 +195,7 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 			if (input == "n" || input == "N")
 			{
 				excluded_files.insert(relative_path + entry.filename().string());
-				alt_file << package_index->first << "\n";
+				alt_file << package_index->second << "\n";
 				break;
 			}
 
@@ -210,7 +204,6 @@ bool c_install(const std::vector<std::string> &targets, const std::vector<std::p
 			
 			alt_file << target_name << "\n";
 			alt_file.close();
-			break;
 		}
 		packages_index.clear();
 

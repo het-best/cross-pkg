@@ -19,6 +19,9 @@
 #include <unistd.h>
 #include <vector>
 #include <unistd.h>
+#include <sys/stat.h>
+#include <pwd.h>
+#include <grp.h>
 
 #include "commands/build.hpp"
 #include "commands/clear.hpp"
@@ -88,18 +91,28 @@ int main(const int argc, char* argv[])
 	if (!std::filesystem::exists(ALT_PATH))
 		exec_cmd(SU_CMD + " mkdir " + static_cast<std::string>(ALT_PATH));
 
-	if (!std::filesystem::exists(CACHE_PATH))
+
+	// Getting cache_path_group
+	struct stat cache_path_info;
+	stat(CACHE_PATH, &cache_path_info);
+	struct passwd *cache_path_passwd = getpwuid(cache_path_info.st_uid);
+	struct group *cache_path_group = getgrgid(cache_path_info.st_gid);
+
+	if (!std::filesystem::exists(CACHE_PATH) || static_cast<std::string>(cache_path_passwd->pw_name) != "root" || static_cast<std::string>(cache_path_group->gr_name) != "wheel")
 	{
-		exec_cmd(SU_CMD + " mkdir " + static_cast<std::string>(CACHE_PATH));
-		exec_cmd(SU_CMD + " chown root:wheel " + static_cast<std::string>(CACHE_PATH));
-		exec_cmd(SU_CMD + " chmod -R 770 " + static_cast<std::string>(CACHE_PATH));
+		exec_cmd(SU_CMD + " sh -c \"mkdir " + static_cast<std::string>(CACHE_PATH) + " 2>/dev/null;" + " chown root:wheel " + static_cast<std::string>(CACHE_PATH) + ";" + " chmod -R 770 " + static_cast<std::string>(CACHE_PATH) + "\"");
 	}
 
-	if (!std::filesystem::exists(LOG_PATH))
+
+	// Getting cache_path_group
+	struct stat log_path_info;
+	stat(LOG_PATH, &log_path_info);
+	struct passwd *log_path_passwd = getpwuid(log_path_info.st_uid);
+	struct group *log_path_group = getgrgid(log_path_info.st_gid);
+
+	if (!std::filesystem::exists(LOG_PATH) || static_cast<std::string>(log_path_passwd->pw_name) != "root" || static_cast<std::string>(log_path_group->gr_name) != "wheel")
 	{
-		exec_cmd(SU_CMD + " mkdir " + static_cast<std::string>(LOG_PATH));
-		exec_cmd(SU_CMD + " chown root:wheel " + static_cast<std::string>(LOG_PATH));
-		exec_cmd(SU_CMD + " chmod -R 770 " + static_cast<std::string>(LOG_PATH));
+		exec_cmd(SU_CMD + " sh -c \"mkdir " + static_cast<std::string>(LOG_PATH) + " 2>/dev/null;" + " chown root:wheel " + static_cast<std::string>(LOG_PATH) + ";" + " chmod -R 770 " + static_cast<std::string>(LOG_PATH) + "\"");
 	}
 
 
